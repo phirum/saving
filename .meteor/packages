@@ -1,0 +1,105 @@
+# Meteor packages used by this project, one per line.
+# Check this file (and the other files in this directory) into your repository.
+#
+# 'meteor add' and 'meteor remove' will edit this file for you,
+# but you can also edit it by hand.
+
+### Core ###
+meteor-platform
+accounts-password
+jquery
+underscore
+coffeescript
+markdown
+reactive-var
+
+### Community ###
+underscorestring:underscore.string
+erasaur:meteor-lodash
+twbs:bootstrap
+fortawesome:fontawesome
+ian:accounts-ui-bootstrap-3
+#mizzao:user-status
+255kb:meteor-status
+sacha:spin
+iron:router
+multiply:iron-router-progress
+zimme:active-route
+rainhaven:iron-seo
+matb33:collection-hooks
+dburles:collection-helpers
+aldeed:collection2
+moonco:fixtures
+meteorhacks:aggregate
+aldeed:simple-schema
+aldeed:autoform
+zimme:collection-softremovable
+natestrauser:select2
+zimme:select2-bootstrap3-css
+aldeed:autoform-select2
+chhib:selectize-bootstrap-3
+comerc:autoform-selectize
+momentjs:moment
+rajit:bootstrap3-datepicker
+aldeed:autoform-bs-datepicker
+tsega:bootstrap3-datetimepicker
+aldeed:autoform-bs-datetimepicker
+aldeed:tabular
+mizzao:bootboxjs
+ovcharik:alertifyjs
+u2622:persistent-session
+ongoworks:security
+alanning:roles
+meteorhacks:fast-render
+reywood:publish-composite
+meteorhacks:subs-manager
+dburles:spacebars-tohtml
+raix:handlebar-helpers
+
+# Auto-Form upload file
+cfs:standard-packages
+cfs:gridfs
+yogiben:autoform-file
+
+ecwyne:mathjs
+lepozepo:accounting
+numeral:numeral
+bigdsk:inputmask
+manuelschoebel:wait-on-lib
+anti:fake
+risul:chance
+simple:reactive-method
+xamfoo:reactive-obj
+frozeman:template-var
+natestrauser:animate-css
+czbaker:lightbox2
+rzymek:fullcalendar
+matteodem:easy-search
+percolate:migrations
+
+# Excel
+netanelgilad:excel
+netanelgilad:node-uuid
+netanelgilad:mkdirp
+vsivsi:file-collection
+
+# Npm
+meteorhacks:npm
+npm-container
+
+# Backup/Restore
+phirum:backup-restore
+
+### Local ###
+theara:collection-cache
+theara:id-generator
+theara:relation-exist
+theara:moneyjs
+theara:fa-helpers
+theara:events
+theara:round-khr
+theara:lightbox-helpers
+theara:breadcrumb
+theara:call-async
+theara:autoprint
+msavin:fetcher

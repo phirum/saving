@@ -1,0 +1,133 @@
+/* Report styles
+-------------------------------------------------- */
+.report-body-bg {
+    font-family: Arial, Verdana, Geneva, sans-serif;
+    font-size: 12px;
+    color: #000000
+}
+
+.report-body {
+    font-family: Arial, Verdana, Geneva, sans-serif;
+    font-size: 10px;
+    color: #000000
+}
+
+/* A4 */
+.report-a4-portrait {
+    margin: 0px auto;
+    width: 720px;
+    padding: 0px;
+}
+
+.report-a4-landscape {
+    margin: 0px auto;
+    width: 1020px;
+    padding: 0px;
+}
+
+/* A5 */
+.report-a5-portrait {
+    margin: 0px auto;
+    width: 510px;
+    padding: 0px;
+}
+
+.report-a5-landscape {
+    margin: 0px auto;
+    width: 720px;
+    padding: 0px;
+}
+
+/* Mini */
+.report-mini-portrait {
+    margin: 0px auto;
+    width: 260px;
+    padding: 0px;
+}
+
+.report-mini-landscape {
+    margin: 0px auto;
+    width: 260px;
+    padding: 0px;
+}
+
+.report-body-bg .report-title {
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 1px solid #000000;
+}
+
+.report-body .report-title {
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    border-bottom: 1px solid #000000;
+}
+
+.report-body-bg .report-title .company-name {
+    font-size: 16px;
+}
+
+.report-body .report-title .company-name {
+    font-size: 14px;
+}
+
+.report-body-bg .report-title .company-name-kh {
+    font-size: 16px;
+    font-family: 'Khmer OS Muol';
+}
+
+.report-body .report-title .company-name-kh {
+    font-size: 14px;
+    font-family: 'Khmer OS Muol';
+}
+
+.report-body-bg .report-title .report-name {
+    font-size: 14px;
+    text-decoration: underline;
+}
+
+.report-body .report-title .report-name {
+    font-size: 12px;
+    text-decoration: underline;
+}
+
+.report-body-bg .report-title .report-address {
+    font-size: 12px;
+}
+
+.report-body .report-title .report-address {
+    font-size: 10px;
+}
+
+.report-content {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #000000;
+}
+
+.report-content-header th {
+    background-color: #d0d2d0;
+    padding: 3px;
+    text-align: center;
+    font-weight: bold;
+    border: 1px solid #555555;
+}
+
+.report-content-body td {
+    padding: 3px;
+    border: 1px solid #555555;
+}
+
+.report-page-header-footer {
+    border-collapse: collapse;
+    width: 100%;
+    padding: 5px;
+}
+
+.report-sign {
+    text-align: center;
+    width: 100%;
+    font-weight: bold;
+}

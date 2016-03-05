@@ -1,0 +1,42 @@
+<template name="saving_accountSearch">
+    <!--Search input-->
+    {{> esInput index="saving_accountSearch" value=data allDocsOnEmpty="true" placeholder="Search account..." class="form-control"}}
+
+    <!--Search List-->
+    <dl>
+        {{#esEach index="saving_accountSearch"}}
+            {{> saving_accountSearchList}}
+        {{/esEach}}
+    </dl>
+
+    <!--Load more/Pagination-->
+    <div align="center">
+        {{> esLoadMoreButton index="saving_accountSearch" class="btn btn-primary"}}
+        <!--{{> esPagination index="saving_accountSearch"}}-->
+    </div>
+
+    <!--No result-->
+    {{#ifEsHasNoResults index="saving_accountSearch"}}
+        <div class="alert alert-danger" role="alert">No Result !!!</div>
+    {{/ifEsHasNoResults}}
+
+    <!--Loading-->
+    {{#ifEsIsSearching index="saving_accountSearch"}}
+        {{> loading}}
+    {{/ifEsIsSearching}}
+</template>
+
+<template name="saving_accountSearchList">
+    {{#with data}}
+        <dt><a href="#" class="item">{{_id}}</a></dt>
+        <dd style="border-bottom: 1px solid">
+            {{lightbox url=_client.photoUrl title=_client.name}}
+            Acc Date: {{accDate}} |
+            Currency: {{cpanel_currencyId}} |
+            Kh Name: {{_client.khName}} |
+            En Name: {{_client.enName}} |
+            Gender: {{_client.gender}} |
+            Saving Officer: {{_staff.name}}
+        </dd>
+    {{/with}}
+</template>

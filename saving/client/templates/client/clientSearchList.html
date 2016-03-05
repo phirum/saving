@@ -1,0 +1,28 @@
+<template name="saving_clientSearchList">
+    <div class="search-input">
+        {{> esInput index="saving_client" value=data allDocsOnEmpty="true"  placeholder="Search customer..." class="form-control"}}
+    </div>
+
+    <dl>
+        {{#esEach index="saving_client"}}
+            <dt><a href="#" class="item">{{_id}}</a></dt>
+            <dd>
+                Kh Name: {{khName}},
+                En Name: {{enName}},
+                Gender: {{gender}},
+                ID Type: {{idType}},
+                ID Number: {{idNumber}}
+            </dd>
+        {{/esEach}}
+    </dl>
+
+    <div align="center">{{> esLoadMoreButton index="saving_client" class="btn btn-primary"}}</div>
+
+    {{#ifEsHasNoResults index="saving_client"}}
+        <div class="no-results">No results found!</div>
+    {{/ifEsHasNoResults}}
+
+    {{#ifEsIsSearching index="saving_client"}}
+        {{> loading}}
+    {{/ifEsIsSearching}}
+</template>

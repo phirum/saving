@@ -1,0 +1,135 @@
+<!--Form-->
+<template name="saving_withdrawalReport">
+    {{#autoForm schema=Saving.Schema.WithdrawalReport id="saving_withdrawalReport" action="withdrawalReportGen" target="_blank"}}
+        <div class="row">
+            <div class="col-md-6">
+                {{> afQuickField name='branch'}}
+                {{> afQuickField name='currency'}}
+                {{> afQuickField name='product'}}
+            </div>
+            <div class="col-md-6">
+                {{> afQuickField name='staff'}}
+                {{> afQuickField name='date'}}
+                <!--{{> afQuickField name='exchange'}}-->
+
+                <div class="form-group{{#if afFieldIsInvalid name='exchange'}} has-error{{/if}}" data-required="true">
+                    <label class="control-label" for="exchange">Exchange</label>
+
+                    <div class="input-group select2-bootstrap-append">
+                        {{> afFieldInput name='exchange'}}
+                        <span class="input-group-addon">
+                            <a href="#" class="exchangeAddon">
+                                {{fa "plus"}}
+                            </a>
+                        </span>
+                    </div>
+                    {{#if afFieldIsInvalid name='exchange'}}
+                        <span class="help-block">{{afFieldMessage name='exchange'}}</span>
+                    {{/if}}
+                </div>
+
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">{{fa "file-text"}} Generate</button>
+        <button type="reset" class="btn btn-default">{{fa "refresh"}} Reset</button>
+    {{/autoForm}}
+</template>
+
+
+<!--Generate-->
+<template name="saving_withdrawalReportGen">
+    {{#if data}}
+        {{#with data}}
+            <!--Title-->
+            <div class="report-title">
+                <span class="report-company-name">{{title.company.enName}}</span><br>
+                Withdrawal Report<br>
+                Date: {{title.date}}<br>
+            </div>
+
+            <!--Header-->
+            <table width="100%" border="0">
+                {{#each header}}
+                    <tr>
+                        <td width="50%">{{col1}}</td>
+                        <td>{{col2}}</td>
+                    </tr>
+                {{/each}}
+            </table>
+
+            <!--Content-->
+            <table class="report-content">
+                <thead class="report-content-header">
+                <tr>
+                    <th>No</th>
+                    <th>Account ID</th>
+                    <th>Client Kh</th>
+                    <th>Client En</th>
+                    <th>PRO</th>
+                    <th>Active Date</th>
+                    <th>Principal Re</th>
+                    <th>Interest Re</th>
+                    <th>Amount</th>
+                    <th>Tax</th>
+                    <th>CRC</th>
+                    <th>Status</th>
+                    <th>Voucher ID</th>
+                    <th>Staff</th>
+                    <th>Branch</th>
+                </tr>
+                </thead>
+
+                <tbody class="report-content-body">
+                {{#each content}}
+                    <tr>
+                        <td>{{index}}</td>
+                        <td>{{accountId}}</td>
+                        <td>{{client.khName}}</td>
+                        <td>{{client.enName}}</td>
+                        <td>{{product}}</td>
+                        <td>{{activeDate}}</td>
+                        <td>{{principalRe}}</td>
+                        <td>{{interestRe}}</td>
+                        <td>{{amount}}</td>
+                        <td>{{tax}}</td>
+                        <td>{{currency}}</td>
+                        <td>{{status}}</td>
+                        <td>{{voucherId}}</td>
+                        <td>{{staff.name}}</td>
+                        <td>{{branch}}</td>
+                    </tr>
+                {{/each}}
+                </tbody>
+            </table>
+
+            <!--Footer-->
+            <p></p>
+            <table class="report-content">
+                <thead class="report-content-header">
+                <tr>
+                    <th width="25%">KHR</th>
+                    <th width="25%">USD</th>
+                    <th width="25%">THB</th>
+                    <th width="25%">Total</th>
+                </tr>
+                </thead>
+
+                <tbody class="report-content-body">
+                {{#each footer}}
+                    <tr>
+                        <td>{{col1}}</td>
+                        <td>{{col2}}</td>
+                        <td>{{col3}}</td>
+                        <td>{{col4}}</td>
+                    </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        {{/with}}
+
+        <!--Sign-->
+        {{> signFooter}}
+    {{else}}
+        <p>Please wait ...</p>
+    {{/if}}
+</template>
