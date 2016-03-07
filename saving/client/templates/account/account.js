@@ -21,13 +21,13 @@ indexTpl.events({
     },
     'click .update': function (e, t) {
         // check status
-        if (this.status == 'Inactive') {
-            var data = Saving.Collection.Account.findOne(this._id);
-            alertify.account(fa("pencil", "Account"), renderTemplate(Template.saving_accountUpdate, data))
-                .maximize();
-        } else {
-            alertify.error('You can\'t update this, because it has been using.');
-        }
+        // if (this.status == 'Inactive') {
+        var data = Saving.Collection.Account.findOne(this._id);
+        alertify.account(fa("pencil", "Account"), renderTemplate(Template.saving_accountUpdate, data))
+            .maximize();
+        /* } else {
+         alertify.error('You can\'t update this, because it has been using.');
+         }*/
     },
     'click .remove': function (e, t) {
         // check status
@@ -139,6 +139,14 @@ AutoForm.hooks({
         onError: function (formType, error) {
             alertify.error(error.message);
         }
+    },
+    saving_accountUpdate: {
+        onSuccess: function (formType, result) {
+            alertify.success('Success');
+        },
+        onError: function (formType, error) {
+            alertify.error(error.message);
+        }
     }
 });
 
@@ -153,5 +161,12 @@ Template.saving_accountClientSearchList.events({
     'click .item': function (e, t) {
         $('[name="clientId"]').val(this._id);
         alertify.clientSearchList().close();
+    }
+});
+
+Template.saving_accountUpdate.helpers({
+    notUsed: function () {
+        debugger;
+        return (this._performCount == null) || (this._performCount == 0);
     }
 });
