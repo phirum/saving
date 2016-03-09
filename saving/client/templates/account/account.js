@@ -143,6 +143,7 @@ AutoForm.hooks({
     saving_accountUpdate: {
         onSuccess: function (formType, result) {
             alertify.success('Success');
+            alertify.account().close();
         },
         onError: function (formType, error) {
             alertify.error(error.message);
