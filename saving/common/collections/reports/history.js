@@ -19,5 +19,8 @@ Saving.Schema.HistoryReport = new SimpleSchema({
                 return Saving.ListForReport.accountForClient();
             }
         }
+    },
+    date:{
+        type:String
     }
 });

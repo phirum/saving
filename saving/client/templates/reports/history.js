@@ -1,7 +1,7 @@
 /************* Form *************/
 Template.saving_historyReport.onRendered(function () {
     var name = $('[name="date"]');
-    DateTimePicker.date(name);
+    DateTimePicker.dateRange(name);
 });
 
 Template.saving_historyReport.events({

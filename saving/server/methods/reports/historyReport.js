@@ -47,7 +47,13 @@ Meteor.methods({
         var content = [];
         var index = 1;
 
-        var accountPerform = Saving.Collection.Perform.find({accountId: self.account}, {sort: {_id: 1}});
+        //Edit by Phirum
+        var selector={};
+        var date = s.words(self.date, ' To ');
+        selector.accountId=self.account;
+        selector.performDate={$gte: date[0], $lte: date[1]};
+
+        var accountPerform = Saving.Collection.Perform.find(selector, {sort: {_id: 1}});
 
         accountPerform.forEach(function (obj) {
             content.push(
