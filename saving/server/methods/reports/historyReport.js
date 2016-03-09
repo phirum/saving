@@ -48,10 +48,11 @@ Meteor.methods({
         var index = 1;
 
         //Edit by Phirum
-        var selector={};
+        var selector = {};
         var date = s.words(self.date, ' To ');
-        selector.accountId=self.account;
-        selector.performDate={$gte: date[0], $lte: date[1]};
+        selector.accountId = self.account;
+        if (self.date != null && self.date)
+            selector.performDate = {$gte: date[0], $lte: date[1]};
 
         var accountPerform = Saving.Collection.Perform.find(selector, {sort: {_id: 1}});
 
@@ -72,6 +73,7 @@ Meteor.methods({
             );
             index += 1;
         });
+
 
         if (content.length > 0) {
             data.content = content;

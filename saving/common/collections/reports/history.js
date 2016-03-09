@@ -21,6 +21,7 @@ Saving.Schema.HistoryReport = new SimpleSchema({
         }
     },
     date:{
-        type:String
+        type:String,
+        optional:true
     }
 });
