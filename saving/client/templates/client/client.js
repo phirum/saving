@@ -19,9 +19,16 @@ Template.saving_client.events({
             .maximize();
     },
     'click .update': function (e, t) {
-        var data = Saving.Collection.Client.findOne(this._id);
-        alertify.client(fa("pencil", "Client"), renderTemplate(Template.saving_clientUpdate, data))
-            .maximize();
+        // var data = Saving.Collection.Client.findOne(this._id);
+        Meteor.call('findOneRecord', 'Saving.Collection.Client', {_id: this._id}, {}, function (er, client) {
+            if (er) {
+                alertify.error(er.message);
+            } else {
+                alertify.client(fa("pencil", "Client"), renderTemplate(Template.saving_clientUpdate, client))
+                    .maximize();
+            }
+        });
+
     },
     'click .remove': function (e, t) {
         var self = this;

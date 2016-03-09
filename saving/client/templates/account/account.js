@@ -22,9 +22,16 @@ indexTpl.events({
     'click .update': function (e, t) {
         // check status
         // if (this.status == 'Inactive') {
-        var data = Saving.Collection.Account.findOne(this._id);
-        alertify.account(fa("pencil", "Account"), renderTemplate(Template.saving_accountUpdate, data))
-            .maximize();
+        //var data = Saving.Collection.Account.findOne(this._id);
+        Meteor.call('findOneRecord', 'Saving.Collection.Account', {_id: this._id}, {}, function (er, account) {
+            if (er) {
+                alertify.error(er.message);
+            } else {
+                alertify.account(fa("pencil", "Account"), renderTemplate(Template.saving_accountUpdate, account))
+                    .maximize();
+            }
+        });
+
         /* } else {
          alertify.error('You can\'t update this, because it has been using.');
          }*/
@@ -61,7 +68,29 @@ indexTpl.events({
  */
 var insertTpl = Template.saving_accountInsert;
 insertTpl.onRendered(function () {
+    Meteor.typeahead.inject();
     datePicker();
+});
+insertTpl.helpers({
+    search: function (query, sync, callback) {
+        Meteor.call('searchClient', query, {}, function (err, res) {
+            if (err) {
+                alertify.error(err.message);
+                return;
+            }
+            callback(res);
+        });
+    },
+    selected: function (event, suggestion, dataSetName) {
+        // event - the jQuery event object
+        // suggestion - the suggestion object
+        // datasetName - the name of the dataset the suggestion belongs to
+        // TODO your event handler here
+        var id = suggestion._id;
+        $('[name="clientId"]').val(id);
+        $('[name="search"]').typeahead('val', suggestion.khName);
+
+    }
 });
 insertTpl.events({
     'change [name="productId"]': function (e, t) {
@@ -75,7 +104,7 @@ insertTpl.events({
         alertify.staff(fa("plus", "Staff"), renderTemplate(Template.saving_staffInsert));
     },
     // Search list
-    'click [name="clientId"]': function () {
+   'click [name="clientId"]': function () {
         var data = {data: $('[name="clientId"]').val()};
 
         alertify.clientSearchList(fa("list", "Client Search List"), renderTemplate(Template.saving_accountClientSearchList, data));

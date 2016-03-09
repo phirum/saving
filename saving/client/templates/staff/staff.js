@@ -19,9 +19,16 @@ Template.saving_staff.events({
             .maximize();
     },
     'click .update': function (e, t) {
-        var data = Saving.Collection.Staff.findOne(this._id);
-        alertify.staff(fa("pencil", "Staff"), renderTemplate(Template.saving_staffUpdate, data))
-            .maximize();
+        Meteor.call('findOneRecord', 'Saving.Collection.Staff', {_id: this._id}, {}, function (er, staff) {
+            if (er) {
+                alertify.error(er.message);
+            } else {
+                alertify.staff(fa("pencil", "Staff"), renderTemplate(Template.saving_staffUpdate, staff))
+                    .maximize();
+            }
+        });
+        //var data = Saving.Collection.Staff.findOne(this._id);
+
     },
     'click .remove': function (e, t) {
         var self = this;

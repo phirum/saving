@@ -29,6 +29,13 @@ Template.saving_deposit.events({
     'click .update': function (e, t) {
         var self = this;
         var data = Saving.Collection.Perform.findOne(self._id);
+        /*Meteor.call('findOneRecord','Saving.Collection.Perform',{_id:this._id},{},function(er,performent){
+            if(er){
+                alertify.error(er.message);
+            }else{
+
+            }
+        });*/
 
         // Check last record or not
         var getLast = lastPerform(data.accountId);
