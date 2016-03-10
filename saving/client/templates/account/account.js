@@ -56,10 +56,16 @@ indexTpl.events({
         }
     },
     'click .show': function (e, t) {
-        var data = Saving.Collection.Account.findOne({_id: this._id});
-        data.inheritorVal = JSON.stringify(data.inheritor, null, '\t');
+        Meteor.call('findOneRecord', 'Saving.Collection.Account', {_id: this._id}, {}, function (er, account) {
+            if (er) {
+                alertify.error(er.message);
+            } else {
+                account.inheritorVal = JSON.stringify(account.inheritor, null, '\t');
+                alertify.alert(fa("eye", "Account"), renderTemplate(Template.saving_accountShow, account));
 
-        alertify.alert(fa("eye", "Account"), renderTemplate(Template.saving_accountShow, data));
+            }
+        });
+        // var data = Saving.Collection.Account.findOne({_id: this._id});
     }
 });
 
@@ -68,7 +74,7 @@ indexTpl.events({
  */
 var insertTpl = Template.saving_accountInsert;
 insertTpl.onRendered(function () {
-    Meteor.typeahead.inject();
+    // Meteor.typeahead.inject();
     datePicker();
 });
 insertTpl.helpers({
@@ -104,12 +110,14 @@ insertTpl.events({
         alertify.staff(fa("plus", "Staff"), renderTemplate(Template.saving_staffInsert));
     },
     // Search list
-   'click [name="clientId"]': function () {
+    'click [name="clientId"]': function () {
         var data = {data: $('[name="clientId"]').val()};
 
-        alertify.clientSearchList(fa("list", "Client Search List"), renderTemplate(Template.saving_accountClientSearchList, data));
+        // alertify.clientSearchList(fa("list", "Client Search List"), renderTemplate(Template.saving_accountClientSearchList, data));
+        alertify.clientSearchList(fa("list", "Client Search List"), renderTemplate(Template.saving_clientSearch, data));
     }
 });
+
 
 /**
  * Update
@@ -124,6 +132,11 @@ updateTpl.events({
     },
     'click .staffInsertAddon': function () {
         alertify.staff(fa("plus", "Staff"), renderTemplate(Template.saving_staffInsert));
+    },
+    'click [name="clientId"]': function () {
+        var data = {data: $('[name="clientId"]').val()};
+        // alertify.clientSearchList(fa("list", "Client Search List"), renderTemplate(Template.saving_accountClientSearchList, data));
+        alertify.clientSearchList(fa("list", "Client Search List"), renderTemplate(Template.saving_clientSearch, data));
     }
 });
 
@@ -187,12 +200,26 @@ var datePicker = function () {
     DateTimePicker.date($('[name="accDate"]'));
 };
 
-Template.saving_accountClientSearchList.events({
+//edit by phirum
+/*
+ Template.saving_accountClientSearchList.events({
+ 'click .item': function (e, t) {
+ $('[name="clientId"]').val(this._id);
+ alertify.clientSearchList().close();
+ }
+ });*/
+/**
+ * Account search
+ */
+Template.saving_clientSearchList.events({
     'click .item': function (e, t) {
-        $('[name="clientId"]').val(this._id);
+        var $client = $('[name="clientId"]');
+        $client.val(this._id);
+        $client.change();
         alertify.clientSearchList().close();
     }
 });
+
 
 Template.saving_accountUpdate.helpers({
     notUsed: function () {

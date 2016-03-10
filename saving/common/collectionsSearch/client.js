@@ -1,7 +1,7 @@
 // Easy search
-EasySearch.createSearchIndex('saving_accountSearch', {
-    collection: Saving.Collection.Account, // instanceof Meteor.Collection
-    field: ['_id', '_client.khName', '_client.enName', '_staff.name'], // array of fields to be searchable
+EasySearch.createSearchIndex('saving_clientSearch', {
+    collection: Saving.Collection.Client, // instanceof Meteor.Collection
+    field: ['_id', 'khName', 'enName'], // array of fields to be searchable
     //transform: function (doc) { // Support elastic-search only
     //    doc.dobVal = moment(doc.dob).format('DD-MM-YYYY');
     //},

@@ -14,5 +14,23 @@ Meteor.methods({
             arr.push({value: obj._id, label: obj._id + " | " + obj.name});
         });
         return arr;
+    },
+    getAccountForClient: function (clientId) {
+        var list = [];
+        list.push({label: "(Select One)", value: ""});
+        Saving.Collection.Account.find({
+            clientId: clientId,
+            _performCount: {$gt: 0}
+        }, {
+            sort: {_id: 1}
+        }).forEach(function (obj) {
+            var product = Saving.Collection.Product.findOne(obj.productId);
+            list.push({
+                label: obj._id + ' | ' + obj.cpanel_currencyId + ' | Pro: ' + product.name,
+                value: obj._id
+            })
+        });
+
+        return list;
     }
 });

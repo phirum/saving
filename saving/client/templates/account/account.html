@@ -42,9 +42,9 @@
             <div class="col-md-6">
                 <!--Client-->
                 <!--{{> afQuickField name='clientId'}}-->
-               <!--edit by phirum-->
+                <!--edit by phirum-->
 
-               <!-- <div class="form-group{{#if afFieldIsInvalid name='clientId'}} has-error{{/if}}" data-required="true">
+                <!-- <div class="form-group{{#if afFieldIsInvalid name='clientId'}} has-error{{/if}}" data-required="true">
                     <label class="control-label" for="clientId">Client</label>
 
                     <div class="input-group select2-bootstrap-append">
@@ -63,8 +63,6 @@
                         <span class="help-block">{{afFieldMessage name='clientId'}}</span>
                     {{/if}}
                 </div>-->
-
-
 
 
                 <div class="form-group{{#if afFieldIsInvalid name='clientId'}} has-error{{/if}}" data-required="true">
@@ -224,12 +222,33 @@
         <dd>{{clientId}}</dd>
         <dt>Staff</dt>
         <dd>{{staffId}}</dd>
-        <dt>Inheritor</dt>
-        <dd>{{inheritorVal}}</dd>
         <dt>Memo</dt>
         <dd>{{memo}}</dd>
         <dt>DW+</dt>
         <dd>{{_performCount}}</dd>
+        <dt>Inheritor</dt>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Gender</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each inheritor}}
+                <tr>
+                    <td>{{name}}</td>
+                    <td>{{gender}}</td>
+                    <td>{{des}}</td>
+                </tr>
+            {{/each}}
+            </tbody>
+
+
+        </table>
+
+
     </dl>
 </template>
 

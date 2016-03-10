@@ -13,58 +13,82 @@ Template.saving_deposit.onCreated(function () {
     // Create new  alertify
     createNewAlertify(['deposit', 'accountSearch']);
 });
+Template.saving_deposit.onRendered(function () {
+    Session.set('depositSelectorSession', null);
+    DateTimePicker.dateRange($('#deposit-date-filter'));
+});
 
 Template.saving_deposit.helpers({
     selector: function () {
-        var pattern = Session.get('currentBranch');
-        //var pattern = new RegExp("^" + branchId.current.branch);
-        return {amount: {$gt: 0}, cpanel_branchId: pattern};
+        var selectorSession = Session.get('depositSelectorSession');
+        if (selectorSession) {
+            return selectorSession;
+        } else {
+            var pattern = Session.get('currentBranch');
+            var selector = {amount: {$gt: 0}, cpanel_branchId: pattern};
+            var today = moment().format('YYYY-MM-DD');
+            selector.performDate = {$gte: today, $lte: today};
+            return selector;
+        }
     }
+
 });
 Template.saving_deposit.events({
+    'change #deposit-date-filter': function () {
+        setDepositSelectorSession();
+    },
     'click .insert': function (e, t) {
         alertify.deposit(fa("plus", "Deposit"), renderTemplate(Template.saving_depositInsert))
             .maximize();
     },
     'click .update': function (e, t) {
-        var self = this;
-        var data = Saving.Collection.Perform.findOne(self._id);
-        /*Meteor.call('findOneRecord','Saving.Collection.Perform',{_id:this._id},{},function(er,performent){
-            if(er){
-                alertify.error(er.message);
-            }else{
+        Meteor.call('findOneRecord', 'Saving.Collection.Perform', {_id: this._id}, {}, function (error, perform) {
+            if (error) {
+                alertify.error(error.message);
+            } else {
+                Meteor.call('getLastPerform', perform.accountId, function (err, getLast) {
+                    if (err) {
+                        alertify.error(err.message);
+                    } else {
+                        if (getLast._id == perform._id) {
+                            Meteor.call('findOneRecord', 'Saving.Collection.Account', {_id: perform.accountId}, {}, function (er, accountDoc) {
+                                if (er) {
+                                    alertify.error(er.message);
+                                } else {
+                                    // Set new state for update form
+                                    state.set('depCycle', 'new');
+                                    state.set('lastDepDate', accountDoc.accDate);
+                                    Meteor.call('getLastPerformExcept', perform.accountId, perform._id, function (le, getLastExcept) {
+                                        if (le) {
+                                            alertify.error(le.message);
+                                        } else {
+                                            state.set('depCycle', 'old');
+                                            state.set('lastDepDate', getLastExcept.performDate);
+
+                                            alertify.deposit(fa("pencil", "Deposit"), renderTemplate(Template.saving_depositUpdate, perform))
+                                                .maximize();
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        else {
+                            // Check dep or with
+                            var type = 'deposit';
+                            if (getLast.amount < 0) {
+                                type = 'withdrawal';
+                            }
+                            var info = '(Voucher ID: ' + getLast.voucherId + ' in ' + type + ')';
+
+                            alertify.warning('You can\'t update this, because don\'t last doc ' + info);
+                        }
+                    }
+                });
 
             }
-        });*/
+        });
 
-        // Check last record or not
-        var getLast = lastPerform(data.accountId);
-        if (getLast._id == data._id) {
-            var accountDoc = Saving.Collection.Account.findOne(self.accountId);
 
-            // Set new state for update form
-            state.set('depCycle', 'new');
-            state.set('lastDepDate', accountDoc.accDate);
-
-            // Get last but except this
-            var getLastExcept = lastPerformExcept(self.accountId, self._id);
-            if (!_.isUndefined(getLastExcept)) {
-                state.set('depCycle', 'old');
-                state.set('lastDepDate', getLastExcept.performDate);
-            }
-
-            alertify.deposit(fa("pencil", "Deposit"), renderTemplate(Template.saving_depositUpdate, data))
-                .maximize();
-        } else {
-            // Check dep or with
-            var type = 'deposit';
-            if (getLast.amount < 0) {
-                type = 'withdrawal';
-            }
-            var info = '(Voucher ID: ' + getLast.voucherId + ' in ' + type + ')';
-
-            alertify.warning('You can\'t update this, because don\'t last doc ' + info);
-        }
     },
     'click .remove': function (e, t) {
         var self = this;
@@ -99,8 +123,13 @@ Template.saving_deposit.events({
         }
     },
     'click .show': function (e, t) {
-        var data = Saving.Collection.Perform.findOne({_id: this._id});
-        alertify.alert(fa("eye", "Deposit"), renderTemplate(Template.saving_depositShow, data));
+        Meteor.call('findOneRecord', 'Saving.Collection.Perform', {_id: this._id}, {}, function (er, perform) {
+            if (er) {
+                alertify.error(er.message);
+            } else {
+                alertify.alert(fa("eye", "Deposit"), renderTemplate(Template.saving_depositShow, perform));
+            }
+        });
     }
 });
 
@@ -324,3 +353,17 @@ var configOnRender = function () {
     var performDate = $('[name="performDate"]');
     DateTimePicker.date(performDate);
 };
+
+function setDepositSelectorSession() {
+    var pattern = Session.get('currentBranch');
+    var selector = {amount: {$gt: 0}, cpanel_branchId: pattern};
+    var dateRange = $('#deposit-date-filter').val();
+    if (dateRange != "") {
+        var date = dateRange.split(" To ");
+        selector.performDate = {$gte: date[0], $lte: date[1]};
+    } else {
+        var today = moment().format('YYYY-MM-DD');
+        selector.performDate = {$gte: today, $lte: today};
+    }
+    Session.set('depositSelectorSession', selector);
+}

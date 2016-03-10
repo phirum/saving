@@ -5,15 +5,29 @@ Template.saving_withdrawal.onCreated(function () {
     // Create new  alertify
     createNewAlertify(['withdrawal', 'accountSearch']);
 });
+Template.saving_withdrawal.onRendered(function () {
+    Session.set('withdrawalSelectorSession', null);
+    DateTimePicker.dateRange($('#withdrawal-date-filter'));
+});
 
 Template.saving_withdrawal.helpers({
     selector: function () {
-        var pattern = Session.get('currentBranch');
-        //var pattern = new RegExp("^" + branchId.current.branch);
-        return {amount: {$lt: 0}, cpanel_branchId: pattern};
+        var selectorSession = Session.get('withdrawalSelectorSession');
+        if (selectorSession) {
+            return selectorSession;
+        } else {
+            var pattern = Session.get('currentBranch');
+            var selector = {amount: {lt: 0}, cpanel_branchId: pattern};
+            var today = moment().format('YYYY-MM-DD');
+            selector.performDate = {$gte: today, $lte: today};
+            return selector;
+        }
     }
 });
 Template.saving_withdrawal.events({
+    'change #withdrawal-date-filter': function () {
+        setWithdrawalSelectorSession();
+    },
     'click .insert': function (e, t) {
         alertify.withdrawal(fa("plus", "Withdrawal"), renderTemplate(Template.saving_withdrawalInsert))
             .maximize();
@@ -50,8 +64,13 @@ Template.saving_withdrawal.events({
         }
     },
     'click .show': function (e, t) {
-        var data = Saving.Collection.Perform.findOne({_id: this._id});
-        alertify.alert(fa("eye", "Withdrawal"), renderTemplate(Template.saving_withdrawalShow, data));
+        Meteor.call('findOneRecord', 'Saving.Collection.Perform', {_id: this._id}, {}, function (er, perform) {
+            if (er) {
+                alertify.error(er.message);
+            } else {
+                alertify.alert(fa("eye", "Withdrawal"), renderTemplate(Template.saving_withdrawalShow, perform));
+            }
+        });
     }
 });
 
@@ -348,3 +367,18 @@ var confirm = function (e, t) {
         }
     }
 };
+
+
+function setWithdrawalSelectorSession() {
+    var pattern = Session.get('currentBranch');
+    var selector = {amount: {$lt: 0}, cpanel_branchId: pattern};
+    var dateRange = $('#withdrawal-date-filter').val();
+    if (dateRange != "") {
+        var date = dateRange.split(" To ");
+        selector.performDate = {$gte: date[0], $lte: date[1]};
+    } else {
+        var today = moment().format('YYYY-MM-DD');
+        selector.performDate = {$gte: today, $lte: today};
+    }
+    Session.set('withdrawalSelectorSession', selector);
+}
