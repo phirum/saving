@@ -11,7 +11,7 @@ var state = new ReactiveObj({
  */
 Template.saving_deposit.onCreated(function () {
     // Create new  alertify
-    createNewAlertify(['deposit', 'accountSearch','depositShow']);
+    createNewAlertify(['deposit', 'accountSearch', 'depositShow']);
 });
 Template.saving_deposit.onRendered(function () {
     Session.set('depositSelectorSession', null);
@@ -237,37 +237,37 @@ AutoForm.hooks({
                         alertify.error('Account must be granter than zero (0)');
                         return false;
                     } else {
-
+                        doc.amount = roundCurrency(doc.amount, doc.accountId);
                         //move to server
                         /*
-                        var prefix = doc.accountId;
-                        doc._id = idGenerator.genWithPrefix(Saving.Collection.Perform, prefix, 4);
-                        doc.amount = roundCurrency(doc.amount, doc.accountId);
+                         var prefix = doc.accountId;
+                         doc._id = idGenerator.genWithPrefix(Saving.Collection.Perform, prefix, 4);
+                         doc.amount = roundCurrency(doc.amount, doc.accountId);
 
-                        // Get last perform
-                        var getLast = lastPerform(doc.accountId);
-                        if (!_.isUndefined(getLast)) { // for the 2, 3... time
-                            var newCal = interestCal(getLast.performDate, doc.performDate, getLast.principalBal, doc.accountId);
-                            doc.dayNumber = newCal.dayNumber;
-                            doc.principalRe = roundCurrency(getLast.principalBal, doc.accountId);
-                            doc.interestRe = roundCurrency(getLast.interestBal + newCal.interest, doc.accountId);
-                            doc.principalBal = roundCurrency(getLast.principalBal + doc.amount, doc.accountId);
-                            doc.interestBal = roundCurrency(doc.interestRe, doc.accountId);
-                            doc.status = 'A';
-                        } else { // for the 1st time
-                            // check with account date
-                            var accountDoc = Saving.Collection.Account.findOne(doc.accountId);
-                            if (accountDoc.accDate != doc.performDate) {
-                                alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
-                                return false;
-                            }
-                            doc.dayNumber = 0;
-                            doc.principalRe = 0;
-                            doc.interestRe = 0;
-                            doc.principalBal = roundCurrency(doc.amount, doc.accountId);
-                            doc.interestBal = 0;
-                            doc.status = 'N';
-                        }
+                         // Get last perform
+                         var getLast = lastPerform(doc.accountId);
+                         if (!_.isUndefined(getLast)) { // for the 2, 3... time
+                         var newCal = interestCal(getLast.performDate, doc.performDate, getLast.principalBal, doc.accountId);
+                         doc.dayNumber = newCal.dayNumber;
+                         doc.principalRe = roundCurrency(getLast.principalBal, doc.accountId);
+                         doc.interestRe = roundCurrency(getLast.interestBal + newCal.interest, doc.accountId);
+                         doc.principalBal = roundCurrency(getLast.principalBal + doc.amount, doc.accountId);
+                         doc.interestBal = roundCurrency(doc.interestRe, doc.accountId);
+                         doc.status = 'A';
+                         } else { // for the 1st time
+                         // check with account date
+                         var accountDoc = Saving.Collection.Account.findOne(doc.accountId);
+                         if (accountDoc.accDate != doc.performDate) {
+                         alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
+                         return false;
+                         }
+                         doc.dayNumber = 0;
+                         doc.principalRe = 0;
+                         doc.interestRe = 0;
+                         doc.principalBal = roundCurrency(doc.amount, doc.accountId);
+                         doc.interestBal = 0;
+                         doc.status = 'N';
+                         }
                          */
                         doc.cpanel_branchId = Session.get('currentBranch');
 
@@ -292,43 +292,44 @@ AutoForm.hooks({
     saving_depositUpdate: {
         before: {
             update: function (doc) {
-                debugger;
-                var updateDoc = this.updateDoc;
 
-                updateDoc.$set.amount = roundCurrency(updateDoc.$set.amount, updateDoc.$set.accountId);
+                doc.$set.amount = roundCurrency(updateDoc.$set.amount, updateDoc.$set.accountId);
 
-                if (updateDoc.$set.amount <= 0) {
+                if (doc.$set.amount <= 0) {
                     alertify.error('Account must be granter than zero (0)');
                     return false;
                 } else {
-                    // Get last perform
-                    var getLast = lastPerformExcept(updateDoc.$set.accountId, this.docId);
-                    if (!_.isUndefined(getLast)) { // for the 2, 3... time
-                        var newCal = interestCal(getLast.performDate, updateDoc.$set.performDate, getLast.principalBal, updateDoc.$set.accountId);
+                    //move to server
+                    /*
+                     // Get last perform
+                     var getLast = lastPerformExcept(doc.$set.accountId, this.docId);
+                     if (!_.isUndefined(getLast)) { // for the 2, 3... time
+                     var newCal = interestCal(getLast.performDate, doc.$set.performDate, getLast.principalBal, doc.$set.accountId);
 
-                        doc.$set.dayNumber = newCal.dayNumber;
-                        doc.$set.principalRe = roundCurrency(getLast.principalBal, updateDoc.$set.accountId);
-                        doc.$set.interestRe = roundCurrency(getLast.interestBal + newCal.interest, updateDoc.$set.accountId);
-                        doc.$set.principalBal = roundCurrency(getLast.principalBal + updateDoc.$set.amount, updateDoc.$set.accountId);
-                        doc.$set.interestBal = roundCurrency(updateDoc.$set.interestRe, updateDoc.$set.accountId);
-                        doc.$set.status = 'A';
-                    } else {
-                        // check with account date
-                        var accountDoc = Saving.Collection.Account.findOne(doc.$set.accountId);
-                        if (accountDoc.accDate != doc.$set.performDate) {
-                            alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
-                            return false;
-                        }
+                     doc.$set.dayNumber = newCal.dayNumber;
+                     doc.$set.principalRe = roundCurrency(getLast.principalBal, doc.$set.accountId);
+                     doc.$set.interestRe = roundCurrency(getLast.interestBal + newCal.interest, doc.$set.accountId);
+                     doc.$set.principalBal = roundCurrency(getLast.principalBal + doc.$set.amount, doc.$set.accountId);
+                     doc.$set.interestBal = roundCurrency(doc.$set.interestRe, doc.$set.accountId);
+                     doc.$set.status = 'A';
+                     }
+                     else {
+                     // check with account date
+                     var accountDoc = Saving.Collection.Account.findOne(doc.$set.accountId);
+                     if (accountDoc.accDate != doc.$set.performDate) {
+                     alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
+                     return false;
+                     }
 
-                        doc.$set.dayNumber = 0;
-                        doc.$set.principalRe = 0;
-                        doc.$set.interestRe = 0;
-                        doc.$set.principalBal = roundCurrency(updateDoc.$set.amount, updateDoc.$set.accountId);
-                        doc.$set.interestBal = 0;
-                        doc.$set.status = 'N';
-                    }
-
-                    doc.$set.voucherId = Session.get('currentBranch') + '-D' + _.padLeft(updateDoc.$set.voucherId, 6, '0');
+                     doc.$set.dayNumber = 0;
+                     doc.$set.principalRe = 0;
+                     doc.$set.interestRe = 0;
+                     doc.$set.principalBal = roundCurrency(doc.$set.amount, doc.$set.accountId);
+                     doc.$set.interestBal = 0;
+                     doc.$set.status = 'N';
+                     }
+                     */
+                    doc.$set.voucherId = Session.get('currentBranch') + '-D' + _.padLeft(doc.$set.voucherId, 6, '0');
 
                     return doc;
                 }
