@@ -11,7 +11,7 @@ var state = new ReactiveObj({
  */
 Template.saving_deposit.onCreated(function () {
     // Create new  alertify
-    createNewAlertify(['deposit', 'accountSearch']);
+    createNewAlertify(['deposit', 'accountSearch','depositShow']);
 });
 Template.saving_deposit.onRendered(function () {
     Session.set('depositSelectorSession', null);
@@ -127,7 +127,7 @@ Template.saving_deposit.events({
             if (er) {
                 alertify.error(er.message);
             } else {
-                alertify.alert(fa("eye", "Deposit"), renderTemplate(Template.saving_depositShow, perform));
+                alertify.depositShow(fa("eye", "Deposit"), renderTemplate(Template.saving_depositShow, perform));
             }
         });
     }
@@ -237,6 +237,9 @@ AutoForm.hooks({
                         alertify.error('Account must be granter than zero (0)');
                         return false;
                     } else {
+
+                        //move to server
+                        /*
                         var prefix = doc.accountId;
                         doc._id = idGenerator.genWithPrefix(Saving.Collection.Perform, prefix, 4);
                         doc.amount = roundCurrency(doc.amount, doc.accountId);
@@ -265,7 +268,7 @@ AutoForm.hooks({
                             doc.interestBal = 0;
                             doc.status = 'N';
                         }
-
+                         */
                         doc.cpanel_branchId = Session.get('currentBranch');
 
                         return doc;
@@ -289,6 +292,7 @@ AutoForm.hooks({
     saving_depositUpdate: {
         before: {
             update: function (doc) {
+                debugger;
                 var updateDoc = this.updateDoc;
 
                 updateDoc.$set.amount = roundCurrency(updateDoc.$set.amount, updateDoc.$set.accountId);

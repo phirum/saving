@@ -3,7 +3,7 @@
  */
 Template.saving_product.onCreated(function () {
     // Create new  alertify
-    createNewAlertify('product');
+    createNewAlertify(['product','productShow']);
 });
 
 Template.saving_product.events({
@@ -21,7 +21,7 @@ Template.saving_product.events({
     },
     'click .show': function (e, t) {
         var data = Saving.Collection.Product.findOne({_id: this._id});
-        alertify.alert(fa("eye", "Product"), renderTemplate(Template.saving_productShow, data));
+        alertify.productShow(fa("eye", "Product"), renderTemplate(Template.saving_productShow, data));
     }
 });
 

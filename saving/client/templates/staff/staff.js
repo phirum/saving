@@ -3,7 +3,7 @@
  */
 Template.saving_staff.onCreated(function () {
     // Create new  alertify
-    createNewAlertify('staff');
+    createNewAlertify(['staff', 'staffShow']);
 });
 
 Template.saving_staff.helpers({
@@ -58,9 +58,11 @@ Template.saving_staff.events({
 
         if (!_.isUndefined(data.photo)) {
             data.photoUrl = Files.findOne(data.photo).url();
+        } else {
+            data.photoUrl = '/no.jpg';
         }
 
-        alertify.alert(fa("eye", "Staff"), renderTemplate(Template.saving_staffShow, data));
+        alertify.staffShow(fa("eye", "Staff"), renderTemplate(Template.saving_staffShow, data));
     }
 });
 

@@ -3,7 +3,7 @@
  */
 Template.cpanel_user.onRendered(function () {
     // Create new  alertify
-    createNewAlertify("user");
+    createNewAlertify(["user","userShow"]);
 });
 
 Template.cpanel_user.events({
@@ -76,7 +76,7 @@ Template.cpanel_user.events({
             this.roles = "";
         }
 
-        alertify.alert(fa("eye", "User"), renderTemplate(Template.cpanel_userShow, this));
+        alertify.userShow(fa("eye", "User"), renderTemplate(Template.cpanel_userShow, this));
     }
 });
 

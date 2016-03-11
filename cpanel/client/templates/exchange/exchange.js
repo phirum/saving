@@ -3,7 +3,7 @@
  */
 Template.cpanel_exchange.onRendered(function () {
     // Create new  alertify
-    createNewAlertify("exchange");
+    createNewAlertify(["exchange", "exchangeShow"]);
 });
 
 Template.cpanel_exchange.events({
@@ -36,7 +36,7 @@ Template.cpanel_exchange.events({
     },
     'click .show': function (e, t) {
         this.ratesVal = JSON.stringify(this.rates);
-        alertify.alert(fa("eye", "Exchange"), renderTemplate(Template.cpanel_exchangeShow, this));
+        alertify.exchangeShow(fa("eye", "Exchange"), renderTemplate(Template.cpanel_exchangeShow, this));
     }
 });
 

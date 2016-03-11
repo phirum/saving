@@ -3,7 +3,7 @@
  */
 Template.saving_client.onCreated(function () {
     // Create new  alertify
-    createNewAlertify('client');
+    createNewAlertify(['client','clientShow']);
 });
 
 Template.saving_client.helpers({
@@ -58,13 +58,12 @@ Template.saving_client.events({
             if (er) {
                 alertify.alert(er.message);
             } else {
-                client.photoUrl = null;
-                if (!_.isUndefined(client.photo)) {
+                if (client.photo) {
                     client.photoUrl = Files.findOne(client.photo).url();
                 } else {
                     client.photoUrl = '/no.jpg';
                 }
-                alertify.alert(fa("eye", "Client"), renderTemplate(Template.saving_clientShow, client));
+                alertify.clientShow(fa("eye", "Client"), renderTemplate(Template.saving_clientShow, client));
             }
         });
 

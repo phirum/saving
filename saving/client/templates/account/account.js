@@ -4,7 +4,7 @@
 var indexTpl = Template.saving_account;
 indexTpl.onCreated(function () {
     // Create new  alertify
-    createNewAlertify(['account', 'client', 'clientSearchList', 'staff']);
+    createNewAlertify(['account', 'client', 'clientSearchList', 'staff', 'accountShow']);
 });
 
 indexTpl.helpers({
@@ -61,7 +61,7 @@ indexTpl.events({
                 alertify.error(er.message);
             } else {
                 account.inheritorVal = JSON.stringify(account.inheritor, null, '\t');
-                alertify.alert(fa("eye", "Account"), renderTemplate(Template.saving_accountShow, account));
+                alertify.accountShow(fa("eye", "Account"), renderTemplate(Template.saving_accountShow, account));
 
             }
         });
@@ -147,15 +147,17 @@ AutoForm.hooks({
     saving_accountInsert: {
         before: {
             insert: function (doc) {
+                // move to server
+                /*
                 var currencyNum = '';
                 if (!_.isEmpty(doc.cpanel_currencyId)) {
                     var currencyDoc = Cpanel.Collection.Currency.findOne(doc.cpanel_currencyId);
                     currencyNum = currencyDoc.num;
                 }
 
-                var prefix = doc.clientId + currencyNum + doc.productId;
-                doc._id = idGenerator.genWithPrefix(Saving.Collection.Account, prefix, 3);
-
+                 var prefix = doc.clientId + currencyNum + doc.productId;
+                 doc._id = idGenerator.genWithPrefix(Saving.Collection.Account, prefix, 3);
+                 */
                 // Maturity date
                 if (_.startsWith(doc.productId, '2')) {
                     var maturityDate = moment(doc.accDate, 'YYYY-MM-DD').add(doc.term, 'months').toDate();
@@ -163,13 +165,16 @@ AutoForm.hooks({
                 }
 
                 // cal cycle
-                var cycle = 1;
-                var lastAccount = Saving.Collection.Account.findOne({clientId: doc.clientId}, {sort: {cycle: -1}});
-                if (!_.isUndefined(lastAccount)) {
-                    cycle = lastAccount.cycle + 1;
-                }
+                // move to server
+                /*
+                 var cycle = 1;
+                 var lastAccount = Saving.Collection.Account.findOne({clientId: doc.clientId}, {sort: {cycle: -1}});
+                 if (!_.isUndefined(lastAccount)) {
+                 cycle = lastAccount.cycle + 1;
+                 }
+                 doc.cycle = cycle;
+                 */
 
-                doc.cycle = cycle;
                 doc.cpanel_branchId = Session.get('currentBranch');
 
                 return doc;

@@ -3,7 +3,7 @@
  */
 Template.cpanel_branch.onRendered(function () {
     // Create new  alertify
-    createNewAlertify("branch");
+    createNewAlertify(["branch",'branchShow']);
 });
 
 Template.cpanel_branch.events({
@@ -34,7 +34,7 @@ Template.cpanel_branch.events({
             null);
     },
     'click .show': function (e, t) {
-        alertify.alert(fa("eye", "Branch"), renderTemplate(Template.cpanel_branchShow, this));
+        alertify.branchShow(fa("eye", "Branch"), renderTemplate(Template.cpanel_branchShow, this));
     }
 });
 

@@ -3,7 +3,7 @@
  */
 Template.saving_withdrawal.onCreated(function () {
     // Create new  alertify
-    createNewAlertify(['withdrawal', 'accountSearch']);
+    createNewAlertify(['withdrawal', 'accountSearch','withdrawalShow']);
 });
 Template.saving_withdrawal.onRendered(function () {
     Session.set('withdrawalSelectorSession', null);
@@ -68,7 +68,7 @@ Template.saving_withdrawal.events({
             if (er) {
                 alertify.error(er.message);
             } else {
-                alertify.alert(fa("eye", "Withdrawal"), renderTemplate(Template.saving_withdrawalShow, perform));
+                alertify.withdrawalShow(fa("eye", "Withdrawal"), renderTemplate(Template.saving_withdrawalShow, perform));
             }
         });
     }
