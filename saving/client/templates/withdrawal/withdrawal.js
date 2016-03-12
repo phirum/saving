@@ -3,7 +3,7 @@
  */
 Template.saving_withdrawal.onCreated(function () {
     // Create new  alertify
-    createNewAlertify(['withdrawal', 'accountSearch', 'withdrawalShow','showConfirm']);
+    createNewAlertify(['withdrawal', 'accountSearch', 'withdrawalShow', 'showConfirm']);
 });
 Template.saving_withdrawal.onRendered(function () {
     Session.set('withdrawalSelectorSession', null);
@@ -36,32 +36,39 @@ Template.saving_withdrawal.events({
         var id = this._id;
 
         // Check last record or not
-        var getLast = lastPerform(this.accountId);
-        if (getLast._id == id) {
-            alertify.confirm(
-                fa("remove", "Withdrawal"),
-                "Are you sure to delete [" + id + "]?",
-                function () {
-                    Saving.Collection.Perform.remove(id, function (error) {
-                        if (error) {
-                            alertify.error(error.message);
-                        } else {
-                            alertify.success("Success");
-                        }
-                    });
-                },
-                null
-            );
-        } else {
-            // Check dep or with
-            var type = 'deposit';
-            if (getLast.amount < 0) {
-                type = 'withdrawal';
-            }
-            var info = '(Voucher ID: ' + getLast.voucherId + ' in ' + type + ')';
+        Meteor.call('getLastPerform', {_id: this.accountId}, function (error, getLast) {
+            if (error) {
+                alertify.error(error.message);
+            } else {
+                if (getLast._id == id) {
+                    alertify.confirm(
+                        fa("remove", "Withdrawal"),
+                        "Are you sure to delete [" + id + "]?",
+                        function () {
+                            Saving.Collection.Perform.remove(id, function (error) {
+                                if (error) {
+                                    alertify.error(error.message);
+                                } else {
+                                    alertify.success("Success");
+                                }
+                            });
+                        },
+                        null
+                    );
+                }
+                else {
+                    // Check dep or with
+                    var type = 'deposit';
+                    if (getLast.amount < 0) {
+                        type = 'withdrawal';
+                    }
+                    var info = '(Voucher ID: ' + getLast.voucherId + ' in ' + type + ')';
 
-            alertify.warning('You can\'t remove this, because don\'t last doc ' + info);
-        }
+                    alertify.warning('You can\'t remove this, because don\'t last doc ' + info);
+                }
+            }
+        });
+
     },
     'click .show': function (e, t) {
         Meteor.call('findOneRecord', 'Saving.Collection.Perform', {_id: this._id}, {}, function (er, perform) {
@@ -94,14 +101,18 @@ Template.saving_withdrawalInsert.events({
     },
     'change [name="accountId"]': function (e, t) {
         var accountId = t.$('[name="accountId"]').val();
-        var getLast = lastPerform(accountId);
+        Meteor.call('getLastPerform', accountId, function (error, getLast) {
+            if (error) {
+                alertify.error(error.message);
+            } else {
+                if (getLast) {
+                    var withDate = t.$('[name="performDate"]');
+                    withDate.data("DateTimePicker").minDate(getLast.performDate);
+                }
+                t.$('[type="submit"]').attr('disabled', 'disabled');
+            }
+        });
 
-        if (!_.isUndefined(getLast)) {
-            var withDate = t.$('[name="performDate"]');
-            withDate.data("DateTimePicker").minDate(getLast.performDate);
-        }
-
-        t.$('[type="submit"]').attr('disabled', 'disabled');
     },
     'focus [name="performDate"]': function (e, t) {
         t.$('[type="submit"]').attr('disabled', 'disabled');
@@ -253,6 +264,7 @@ var confirm = function (e, t) {
                                         if (le) {
                                             alertify.error(le.message);
                                         } else {
+
                                             // Receivable interest
                                             var interestCalResult = interestCalWithRate(getLast.performDate, performDate, getLast.principalBal, productDoc.rate, accountId);
                                             var dayNumberResult = interestCalResult.dayNumber;
@@ -291,6 +303,28 @@ var confirm = function (e, t) {
                                                     // Cal penalty interest with easy rate
                                                     var sumOfInterest = 0;
                                                     var sumOfInterestWithNew;
+                                                    /*    console.log(sumOfInterest);
+                                                     Meteor.call('findRecords', 'Saving.Collection.Perform', {accountId: accountId}, {}, function (lle, performs) {
+                                                     if (lle) {
+                                                     alertify.error(lle.message);
+                                                     } else {
+                                                     performs.forEach(function (perform) {
+                                                     sumOfInterest += perform.interestRe;
+                                                     });
+                                                     console.log('------sum inside the method-----');
+                                                     sumOfInterest += 1;
+                                                     console.log(sumOfInterest);
+
+                                                     }
+                                                     });
+                                                     console.log('--------after finish call method---------');
+                                                     console.log(sumOfInterest);*/
+
+                                                    /* var fetcherParams = "getPerform" + accountId;
+                                                     Fetcher.setDefault(fetcherParams, false);
+                                                     Fetcher.retrieve(fetcherParams, 'findRecords', 'Saving.Collection.Perform', {accountId: accountId});
+                                                     var performs = Fetcher.get(fetcherParams);*/
+
                                                     Saving.Collection.Perform.find({accountId: accountId})
                                                         .forEach(function (obj) {
                                                             sumOfInterest += obj.interestRe;
@@ -346,7 +380,8 @@ var confirm = function (e, t) {
                                                             }
                                                         });
 
-                                                } else if (productDoc._id == '203' || productDoc._id == '204') {// For product = 203, 204
+                                                }
+                                                else if (productDoc._id == '203' || productDoc._id == '204') {// For product = 203, 204
                                                     alertify.alert(
                                                         'Confirm',
                                                         renderTemplate(Template.saving_withdrawalConfirmForAchievment, confirmData).html

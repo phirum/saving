@@ -94,33 +94,41 @@ Template.saving_deposit.events({
         var self = this;
 
         // Check last record or not
-        var getLast = lastPerform(self.accountId);
-        if (getLast._id == self._id) {
-            alertify.confirm(
-                fa("remove", "Deposit"),
-                "Are you sure to delete [" + self._id + "]?",
-                function () {
-                    Saving.Collection.Perform.remove(self._id, function (error) {
-                        if (error) {
-                            alertify.error(error.message);
-                        } else {
-                            alertify.success("Success");
-                        }
-                    });
-                },
-                null
-            );
+        Meteor.call('getLastPerform', self.accountId, function (error, getLast) {
+            if (error) {
+                alertify.error(error.message);
+            } else {
+                if (getLast._id == self._id) {
+                    alertify.confirm(
+                        fa("remove", "Deposit"),
+                        "Are you sure to delete [" + self._id + "]?",
+                        function () {
+                            Saving.Collection.Perform.remove(self._id, function (error) {
+                                if (error) {
+                                    alertify.error(error.message);
+                                } else {
+                                    alertify.success("Success");
+                                }
+                            });
+                        },
+                        null
+                    );
 
-        } else {
-            // Check dep or with
-            var type = 'deposit';
-            if (getLast.amount < 0) {
-                type = 'withdrawal';
+                }
+                else {
+                    // Check dep or with
+                    var type = 'deposit';
+                    if (getLast.amount < 0) {
+                        type = 'withdrawal';
+                    }
+                    var info = '(Voucher ID: ' + getLast.voucherId + ' in ' + type + ')';
+
+                    alertify.warning('You can\'t remove this, because don\'t last doc ' + info);
+                }
             }
-            var info = '(Voucher ID: ' + getLast.voucherId + ' in ' + type + ')';
+        });
 
-            alertify.warning('You can\'t remove this, because don\'t last doc ' + info);
-        }
+
     },
     'click .show': function (e, t) {
         Meteor.call('findOneRecord', 'Saving.Collection.Perform', {_id: this._id}, {}, function (er, perform) {
@@ -180,15 +188,27 @@ Template.saving_depositInsert.events({
 
         if (!_.isEmpty(accountId)) {
             // Check last perform exist
-            var getLast = lastPerform(accountId);
-            if (!_.isUndefined(getLast)) {
-                depDate.val(getLast.performDate);
-                depDate.data("DateTimePicker").minDate(getLast.performDate);
-            } else {
-                var accountDoc = Saving.Collection.Account.findOne(accountId);
-                depDate.val(accountDoc.accDate);
-                depDate.attr('readonly', 'true');
-            }
+            Meteor.call('getLastPerform', accountId, function (error, getLast) {
+                if (error) {
+                    alertify.error(error.message);
+                } else {
+                    if (getLast) {
+                        depDate.val(getLast.performDate);
+                        depDate.data("DateTimePicker").minDate(getLast.performDate);
+                    } else {
+                        Meteor.call('findOneRecord', 'Saving.Collection.Account', {_id: accountId}, {}, function (err, accountDoc) {
+                            if (err) {
+                                alertify.error(err.message);
+                            } else {
+                                depDate.val(accountDoc.accDate);
+                                depDate.attr('readonly', 'true');
+                            }
+                        });
+
+                    }
+                }
+            });
+
         }
     }
 });
@@ -214,6 +234,7 @@ Template.saving_depositUpdate.onRendered(function () {
  */
 Template.saving_depositAccountSearch.events({
     'click .item': function (e, t) {
+        debugger;
         var $account = $('[name="accountId"]');
         $account.val(this._id);
         $account.change();
