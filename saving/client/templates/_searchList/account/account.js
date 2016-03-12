@@ -29,6 +29,8 @@ listTpl.helpers({
 
         if (!_.isUndefined(self._client.photo)) {
             self._client.photoUrl = Files.findOne(self._client.photo).url();
+        } else {
+            self.photoUrl = '/no.jpg';
         }
 
         return self;

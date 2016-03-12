@@ -1,3 +1,15 @@
+<template name="repo">
+    <div class="row">
+        <!-- <div class="col-lg-3">
+            <img src="{{url}}" width="80px" height="80px" class="img-circle">
+        </div>-->
+        <div class="col-lg-9">
+            <p><b style="font-size: 18px;">{{khName}} | {{enName}}</b></p>
+            <p>
+            </p>
+        </div>
+    </div>
+</template>
 <!--Index-->
 <template name="saving_account">
     <p>
@@ -30,6 +42,29 @@
             <div class="col-md-6">
                 <!--Client-->
                 <!--{{> afQuickField name='clientId'}}-->
+                <!--edit by phirum-->
+
+                <!-- <div class="form-group{{#if afFieldIsInvalid name='clientId'}} has-error{{/if}}" data-required="true">
+                    <label class="control-label" for="clientId">Client</label>
+
+                    <div class="input-group select2-bootstrap-append">
+                        <input class="form-control typeahead input-sm" name="search" type="text"
+                               placeholder="Type your client name" autocomplete="on" spellcheck="off"
+                               data-source="search" data-select='selected' data-highlight=true
+                               data-template='repo' style="width: 250px;"/>
+
+                        <span class="input-group-addon">
+                            <a href="#" class="clientInsertAddon">
+                                {{fa "plus"}}
+                            </a>
+                        </span>
+                    </div>
+                    {{#if afFieldIsInvalid name='clientId'}}
+                        <span class="help-block">{{afFieldMessage name='clientId'}}</span>
+                    {{/if}}
+                </div>-->
+
+
                 <div class="form-group{{#if afFieldIsInvalid name='clientId'}} has-error{{/if}}" data-required="true">
                     <label class="control-label" for="clientId">Client</label>
 
@@ -45,6 +80,7 @@
                         <span class="help-block">{{afFieldMessage name='clientId'}}</span>
                     {{/if}}
                 </div>
+
 
                 <!--Staff-->
                 <!--{{> afQuickField name='staffId'}}-->
@@ -186,12 +222,33 @@
         <dd>{{clientId}}</dd>
         <dt>Staff</dt>
         <dd>{{staffId}}</dd>
-        <dt>Inheritor</dt>
-        <dd>{{inheritorVal}}</dd>
         <dt>Memo</dt>
         <dd>{{memo}}</dd>
         <dt>DW+</dt>
         <dd>{{_performCount}}</dd>
+        <dt>Inheritor</dt>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Gender</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each inheritor}}
+                <tr>
+                    <td>{{name}}</td>
+                    <td>{{gender}}</td>
+                    <td>{{des}}</td>
+                </tr>
+            {{/each}}
+            </tbody>
+
+
+        </table>
+
+
     </dl>
 </template>
 

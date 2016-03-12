@@ -3,7 +3,7 @@
  */
 Template.saving_staff.onCreated(function () {
     // Create new  alertify
-    createNewAlertify('staff');
+    createNewAlertify(['staff', 'staffShow']);
 });
 
 Template.saving_staff.helpers({
@@ -19,9 +19,16 @@ Template.saving_staff.events({
             .maximize();
     },
     'click .update': function (e, t) {
-        var data = Saving.Collection.Staff.findOne(this._id);
-        alertify.staff(fa("pencil", "Staff"), renderTemplate(Template.saving_staffUpdate, data))
-            .maximize();
+        Meteor.call('findOneRecord', 'Saving.Collection.Staff', {_id: this._id}, {}, function (er, staff) {
+            if (er) {
+                alertify.error(er.message);
+            } else {
+                alertify.staff(fa("pencil", "Staff"), renderTemplate(Template.saving_staffUpdate, staff))
+                    .maximize();
+            }
+        });
+        //var data = Saving.Collection.Staff.findOne(this._id);
+
     },
     'click .remove': function (e, t) {
         var self = this;
@@ -51,9 +58,11 @@ Template.saving_staff.events({
 
         if (!_.isUndefined(data.photo)) {
             data.photoUrl = Files.findOne(data.photo).url();
+        } else {
+            data.photoUrl = '/no.jpg';
         }
 
-        alertify.alert(fa("eye", "Staff"), renderTemplate(Template.saving_staffShow, data));
+        alertify.staffShow(fa("eye", "Staff"), renderTemplate(Template.saving_staffShow, data));
     }
 });
 

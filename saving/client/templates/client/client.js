@@ -3,7 +3,7 @@
  */
 Template.saving_client.onCreated(function () {
     // Create new  alertify
-    createNewAlertify('client');
+    createNewAlertify(['client','clientShow']);
 });
 
 Template.saving_client.helpers({
@@ -19,9 +19,16 @@ Template.saving_client.events({
             .maximize();
     },
     'click .update': function (e, t) {
-        var data = Saving.Collection.Client.findOne(this._id);
-        alertify.client(fa("pencil", "Client"), renderTemplate(Template.saving_clientUpdate, data))
-            .maximize();
+        // var data = Saving.Collection.Client.findOne(this._id);
+        Meteor.call('findOneRecord', 'Saving.Collection.Client', {_id: this._id}, {}, function (er, client) {
+            if (er) {
+                alertify.error(er.message);
+            } else {
+                alertify.client(fa("pencil", "Client"), renderTemplate(Template.saving_clientUpdate, client))
+                    .maximize();
+            }
+        });
+
     },
     'click .remove': function (e, t) {
         var self = this;
@@ -47,14 +54,20 @@ Template.saving_client.events({
         }
     },
     'click .show': function (e, t) {
-        var data = Saving.Collection.Client.findOne({_id: this._id});
-        data.photoUrl = null;
+        Meteor.call('findOneRecord', 'Saving.Collection.Client', {_id: this._id}, {}, function (er, client) {
+            if (er) {
+                alertify.alert(er.message);
+            } else {
+                if (client.photo) {
+                    client.photoUrl = Files.findOne(client.photo).url();
+                } else {
+                    client.photoUrl = '/no.jpg';
+                }
+                alertify.clientShow(fa("eye", "Client"), renderTemplate(Template.saving_clientShow, client));
+            }
+        });
 
-        if (!_.isUndefined(data.photo)) {
-            data.photoUrl = Files.findOne(data.photo).url();
-        }
 
-        alertify.alert(fa("eye", "Client"), renderTemplate(Template.saving_clientShow, data));
     }
 });
 
@@ -79,8 +92,6 @@ AutoForm.hooks({
     saving_clientInsert: {
         before: {
             insert: function (doc) {
-                var branchPre = Session.get('currentBranch') + '-';
-                doc._id = idGenerator.genWithPrefix(Saving.Collection.Client, branchPre, 6);
                 doc.cpanel_branchId = Session.get('currentBranch');
                 return doc;
             }

@@ -11,53 +11,84 @@ var state = new ReactiveObj({
  */
 Template.saving_deposit.onCreated(function () {
     // Create new  alertify
-    createNewAlertify(['deposit', 'accountSearch']);
+    createNewAlertify(['deposit', 'accountSearch', 'depositShow']);
+});
+Template.saving_deposit.onRendered(function () {
+    Session.set('depositSelectorSession', null);
+    DateTimePicker.dateRange($('#deposit-date-filter'));
 });
 
 Template.saving_deposit.helpers({
     selector: function () {
-        var pattern = Session.get('currentBranch');
-        //var pattern = new RegExp("^" + branchId.current.branch);
-        return {amount: {$gt: 0}, cpanel_branchId: pattern};
+        var selectorSession = Session.get('depositSelectorSession');
+        if (selectorSession) {
+            return selectorSession;
+        } else {
+            var pattern = Session.get('currentBranch');
+            var selector = {amount: {$gt: 0}, cpanel_branchId: pattern};
+            var today = moment().format('YYYY-MM-DD');
+            selector.performDate = {$gte: today, $lte: today};
+            return selector;
+        }
     }
+
 });
 Template.saving_deposit.events({
+    'change #deposit-date-filter': function () {
+        setDepositSelectorSession();
+    },
     'click .insert': function (e, t) {
         alertify.deposit(fa("plus", "Deposit"), renderTemplate(Template.saving_depositInsert))
             .maximize();
     },
     'click .update': function (e, t) {
-        var self = this;
-        var data = Saving.Collection.Perform.findOne(self._id);
+        Meteor.call('findOneRecord', 'Saving.Collection.Perform', {_id: this._id}, {}, function (error, perform) {
+            if (error) {
+                alertify.error(error.message);
+            } else {
+                Meteor.call('getLastPerform', perform.accountId, function (err, getLast) {
+                    if (err) {
+                        alertify.error(err.message);
+                    } else {
+                        if (getLast._id == perform._id) {
+                            Meteor.call('findOneRecord', 'Saving.Collection.Account', {_id: perform.accountId}, {}, function (er, accountDoc) {
+                                if (er) {
+                                    alertify.error(er.message);
+                                } else {
+                                    // Set new state for update form
+                                    state.set('depCycle', 'new');
+                                    state.set('lastDepDate', accountDoc.accDate);
+                                    Meteor.call('getLastPerformExcept', perform.accountId, perform._id, function (le, getLastExcept) {
+                                        if (le) {
+                                            alertify.error(le.message);
+                                        } else {
+                                            state.set('depCycle', 'old');
+                                            state.set('lastDepDate', getLastExcept.performDate);
 
-        // Check last record or not
-        var getLast = lastPerform(data.accountId);
-        if (getLast._id == data._id) {
-            var accountDoc = Saving.Collection.Account.findOne(self.accountId);
+                                            alertify.deposit(fa("pencil", "Deposit"), renderTemplate(Template.saving_depositUpdate, perform))
+                                                .maximize();
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        else {
+                            // Check dep or with
+                            var type = 'deposit';
+                            if (getLast.amount < 0) {
+                                type = 'withdrawal';
+                            }
+                            var info = '(Voucher ID: ' + getLast.voucherId + ' in ' + type + ')';
 
-            // Set new state for update form
-            state.set('depCycle', 'new');
-            state.set('lastDepDate', accountDoc.accDate);
+                            alertify.warning('You can\'t update this, because don\'t last doc ' + info);
+                        }
+                    }
+                });
 
-            // Get last but except this
-            var getLastExcept = lastPerformExcept(self.accountId, self._id);
-            if (!_.isUndefined(getLastExcept)) {
-                state.set('depCycle', 'old');
-                state.set('lastDepDate', getLastExcept.performDate);
             }
+        });
 
-            alertify.deposit(fa("pencil", "Deposit"), renderTemplate(Template.saving_depositUpdate, data))
-                .maximize();
-        } else {
-            // Check dep or with
-            var type = 'deposit';
-            if (getLast.amount < 0) {
-                type = 'withdrawal';
-            }
-            var info = '(Voucher ID: ' + getLast.voucherId + ' in ' + type + ')';
 
-            alertify.warning('You can\'t update this, because don\'t last doc ' + info);
-        }
     },
     'click .remove': function (e, t) {
         var self = this;
@@ -92,8 +123,13 @@ Template.saving_deposit.events({
         }
     },
     'click .show': function (e, t) {
-        var data = Saving.Collection.Perform.findOne({_id: this._id});
-        alertify.alert(fa("eye", "Deposit"), renderTemplate(Template.saving_depositShow, data));
+        Meteor.call('findOneRecord', 'Saving.Collection.Perform', {_id: this._id}, {}, function (er, perform) {
+            if (er) {
+                alertify.error(er.message);
+            } else {
+                alertify.depositShow(fa("eye", "Deposit"), renderTemplate(Template.saving_depositShow, perform));
+            }
+        });
     }
 });
 
@@ -201,35 +237,38 @@ AutoForm.hooks({
                         alertify.error('Account must be granter than zero (0)');
                         return false;
                     } else {
-                        var prefix = doc.accountId;
-                        doc._id = idGenerator.genWithPrefix(Saving.Collection.Perform, prefix, 4);
                         doc.amount = roundCurrency(doc.amount, doc.accountId);
+                        //move to server
+                        /*
+                         var prefix = doc.accountId;
+                         doc._id = idGenerator.genWithPrefix(Saving.Collection.Perform, prefix, 4);
+                         doc.amount = roundCurrency(doc.amount, doc.accountId);
 
-                        // Get last perform
-                        var getLast = lastPerform(doc.accountId);
-                        if (!_.isUndefined(getLast)) { // for the 2, 3... time
-                            var newCal = interestCal(getLast.performDate, doc.performDate, getLast.principalBal, doc.accountId);
-                            doc.dayNumber = newCal.dayNumber;
-                            doc.principalRe = roundCurrency(getLast.principalBal, doc.accountId);
-                            doc.interestRe = roundCurrency(getLast.interestBal + newCal.interest, doc.accountId);
-                            doc.principalBal = roundCurrency(getLast.principalBal + doc.amount, doc.accountId);
-                            doc.interestBal = roundCurrency(doc.interestRe, doc.accountId);
-                            doc.status = 'A';
-                        } else { // for the 1st time
-                            // check with account date
-                            var accountDoc = Saving.Collection.Account.findOne(doc.accountId);
-                            if (accountDoc.accDate != doc.performDate) {
-                                alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
-                                return false;
-                            }
-                            doc.dayNumber = 0;
-                            doc.principalRe = 0;
-                            doc.interestRe = 0;
-                            doc.principalBal = roundCurrency(doc.amount, doc.accountId);
-                            doc.interestBal = 0;
-                            doc.status = 'N';
-                        }
-
+                         // Get last perform
+                         var getLast = lastPerform(doc.accountId);
+                         if (!_.isUndefined(getLast)) { // for the 2, 3... time
+                         var newCal = interestCal(getLast.performDate, doc.performDate, getLast.principalBal, doc.accountId);
+                         doc.dayNumber = newCal.dayNumber;
+                         doc.principalRe = roundCurrency(getLast.principalBal, doc.accountId);
+                         doc.interestRe = roundCurrency(getLast.interestBal + newCal.interest, doc.accountId);
+                         doc.principalBal = roundCurrency(getLast.principalBal + doc.amount, doc.accountId);
+                         doc.interestBal = roundCurrency(doc.interestRe, doc.accountId);
+                         doc.status = 'A';
+                         } else { // for the 1st time
+                         // check with account date
+                         var accountDoc = Saving.Collection.Account.findOne(doc.accountId);
+                         if (accountDoc.accDate != doc.performDate) {
+                         alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
+                         return false;
+                         }
+                         doc.dayNumber = 0;
+                         doc.principalRe = 0;
+                         doc.interestRe = 0;
+                         doc.principalBal = roundCurrency(doc.amount, doc.accountId);
+                         doc.interestBal = 0;
+                         doc.status = 'N';
+                         }
+                         */
                         doc.cpanel_branchId = Session.get('currentBranch');
 
                         return doc;
@@ -253,42 +292,44 @@ AutoForm.hooks({
     saving_depositUpdate: {
         before: {
             update: function (doc) {
-                var updateDoc = this.updateDoc;
 
-                updateDoc.$set.amount = roundCurrency(updateDoc.$set.amount, updateDoc.$set.accountId);
+                doc.$set.amount = roundCurrency(doc.$set.amount, doc.$set.accountId);
 
-                if (updateDoc.$set.amount <= 0) {
+                if (doc.$set.amount <= 0) {
                     alertify.error('Account must be granter than zero (0)');
                     return false;
                 } else {
-                    // Get last perform
-                    var getLast = lastPerformExcept(updateDoc.$set.accountId, this.docId);
-                    if (!_.isUndefined(getLast)) { // for the 2, 3... time
-                        var newCal = interestCal(getLast.performDate, updateDoc.$set.performDate, getLast.principalBal, updateDoc.$set.accountId);
+                    //move to server
+                    /*
+                     // Get last perform
+                     var getLast = lastPerformExcept(doc.$set.accountId, this.docId);
+                     if (!_.isUndefined(getLast)) { // for the 2, 3... time
+                     var newCal = interestCal(getLast.performDate, doc.$set.performDate, getLast.principalBal, doc.$set.accountId);
 
-                        doc.$set.dayNumber = newCal.dayNumber;
-                        doc.$set.principalRe = roundCurrency(getLast.principalBal, updateDoc.$set.accountId);
-                        doc.$set.interestRe = roundCurrency(getLast.interestBal + newCal.interest, updateDoc.$set.accountId);
-                        doc.$set.principalBal = roundCurrency(getLast.principalBal + updateDoc.$set.amount, updateDoc.$set.accountId);
-                        doc.$set.interestBal = roundCurrency(updateDoc.$set.interestRe, updateDoc.$set.accountId);
-                        doc.$set.status = 'A';
-                    } else {
-                        // check with account date
-                        var accountDoc = Saving.Collection.Account.findOne(doc.$set.accountId);
-                        if (accountDoc.accDate != doc.$set.performDate) {
-                            alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
-                            return false;
-                        }
+                     doc.$set.dayNumber = newCal.dayNumber;
+                     doc.$set.principalRe = roundCurrency(getLast.principalBal, doc.$set.accountId);
+                     doc.$set.interestRe = roundCurrency(getLast.interestBal + newCal.interest, doc.$set.accountId);
+                     doc.$set.principalBal = roundCurrency(getLast.principalBal + doc.$set.amount, doc.$set.accountId);
+                     doc.$set.interestBal = roundCurrency(doc.$set.interestRe, doc.$set.accountId);
+                     doc.$set.status = 'A';
+                     }
+                     else {
+                     // check with account date
+                     var accountDoc = Saving.Collection.Account.findOne(doc.$set.accountId);
+                     if (accountDoc.accDate != doc.$set.performDate) {
+                     alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
+                     return false;
+                     }
 
-                        doc.$set.dayNumber = 0;
-                        doc.$set.principalRe = 0;
-                        doc.$set.interestRe = 0;
-                        doc.$set.principalBal = roundCurrency(updateDoc.$set.amount, updateDoc.$set.accountId);
-                        doc.$set.interestBal = 0;
-                        doc.$set.status = 'N';
-                    }
-
-                    doc.$set.voucherId = Session.get('currentBranch') + '-D' + _.padLeft(updateDoc.$set.voucherId, 6, '0');
+                     doc.$set.dayNumber = 0;
+                     doc.$set.principalRe = 0;
+                     doc.$set.interestRe = 0;
+                     doc.$set.principalBal = roundCurrency(doc.$set.amount, doc.$set.accountId);
+                     doc.$set.interestBal = 0;
+                     doc.$set.status = 'N';
+                     }
+                     */
+                    doc.$set.voucherId = Session.get('currentBranch') + '-D' + _.padLeft(doc.$set.voucherId, 6, '0');
 
                     return doc;
                 }
@@ -317,3 +358,17 @@ var configOnRender = function () {
     var performDate = $('[name="performDate"]');
     DateTimePicker.date(performDate);
 };
+
+function setDepositSelectorSession() {
+    var pattern = Session.get('currentBranch');
+    var selector = {amount: {$gt: 0}, cpanel_branchId: pattern};
+    var dateRange = $('#deposit-date-filter').val();
+    if (dateRange != "") {
+        var date = dateRange.split(" To ");
+        selector.performDate = {$gte: date[0], $lte: date[1]};
+    } else {
+        var today = moment().format('YYYY-MM-DD');
+        selector.performDate = {$gte: today, $lte: today};
+    }
+    Session.set('depositSelectorSession', selector);
+}

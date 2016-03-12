@@ -3,11 +3,13 @@
     {{#autoForm schema=Saving.Schema.HistoryReport id="saving_historyReport" action="historyReportGen" target="_blank"}}
         <div class="row">
             <div class="col-md-6">
-                {{> afQuickField name='client'}}
-                {{> afQuickField name='date'}}
+                {{> afQuickField name='clientId' readonly="true" placeholder="Click to seach client"}}
+                {{> afQuickField name='account' options=accounts type="select2"}}
+
             </div>
             <div class="col-md-6">
-                {{> afQuickField name='account'}}
+                {{> afQuickField name='date'}}
+
             </div>
         </div>
         <button type="submit" class="btn btn-primary">{{fa "file-text"}} Generate</button>
