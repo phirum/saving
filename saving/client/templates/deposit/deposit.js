@@ -293,7 +293,7 @@ AutoForm.hooks({
         before: {
             update: function (doc) {
 
-                doc.$set.amount = roundCurrency(updateDoc.$set.amount, updateDoc.$set.accountId);
+                doc.$set.amount = roundCurrency(doc.$set.amount, doc.$set.accountId);
 
                 if (doc.$set.amount <= 0) {
                     alertify.error('Account must be granter than zero (0)');

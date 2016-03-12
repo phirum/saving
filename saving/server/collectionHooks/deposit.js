@@ -61,33 +61,35 @@ Saving.Collection.Perform.before.insert(function (userId, doc) {
 
 Saving.Collection.Perform.before.update(function (userId, doc, fieldNames, modifier, options) {
     modifier.$set = modifier.$set || {};
-    console.log(doc._id);
 
-    var getLast = lastPerformExcept(modifier.$set.accountId, doc._id);
-    if (getLast) { // for the 2, 3... time
-        var newCal = interestCal(getLast.performDate, modifier.$set.performDate, getLast.principalBal, modifier.$set.accountId);
+    //need to check about direct update when update account.
+    if (modifier.$set.amount) {
+        var getLast = lastPerformExcept(modifier.$set.accountId, doc._id);
+        if (getLast) { // for the 2, 3... time
+            var newCal = interestCalServer(getLast.performDate, modifier.$set.performDate, getLast.principalBal, modifier.$set.accountId);
 
-        modifier.$set.dayNumber = newCal.dayNumber;
-        modifier.$set.principalRe = roundCurrencyServer(getLast.principalBal, modifier.$set.accountId);
-        modifier.$set.interestRe = roundCurrencyServer(getLast.interestBal + newCal.interest, modifier.$set.accountId);
-        modifier.$set.principalBal = roundCurrencyServer(getLast.principalBal + modifier.$set.amount, modifier.$set.accountId);
-        modifier.$set.interestBal = roundCurrencyServer(modifier.$set.interestRe, modifier.$set.accountId);
-        modifier.$set.status = 'A';
-    }
-    else {
-        // check with account date
-        var accountDoc = Saving.Collection.Account.findOne(modifier.$set.accountId);
-        if (accountDoc.accDate != modifier.$set.performDate) {
-            //alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
-            throw new Meteor.Error('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
+            modifier.$set.dayNumber = newCal.dayNumber;
+            modifier.$set.principalRe = roundCurrencyServer(getLast.principalBal, modifier.$set.accountId);
+            modifier.$set.interestRe = roundCurrencyServer(getLast.interestBal + newCal.interest, modifier.$set.accountId);
+            modifier.$set.principalBal = roundCurrencyServer(getLast.principalBal + modifier.$set.amount, modifier.$set.accountId);
+            modifier.$set.interestBal = roundCurrencyServer(modifier.$set.interestRe, modifier.$set.accountId);
+            modifier.$set.status = 'A';
         }
+        else {
+            // check with account date
+            var accountDoc = Saving.Collection.Account.findOne(modifier.$set.accountId);
+            if (accountDoc.accDate != modifier.$set.performDate) {
+                //alertify.warning('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
+                throw new Meteor.Error('Deposit date must be equal to account date (' + accountDoc.accDate + ') for the first time.');
+            }
 
-        modifier.$set.dayNumber = 0;
-        modifier.$set.principalRe = 0;
-        modifier.$set.interestRe = 0;
-        modifier.$set.principalBal = roundCurrencyServer(modifier.$set.amount, modifier.$set.accountId);
-        modifier.$set.interestBal = 0;
-        modifier.$set.status = 'N';
+            modifier.$set.dayNumber = 0;
+            modifier.$set.principalRe = 0;
+            modifier.$set.interestRe = 0;
+            modifier.$set.principalBal = roundCurrencyServer(modifier.$set.amount, modifier.$set.accountId);
+            modifier.$set.interestBal = 0;
+            modifier.$set.status = 'N';
+        }
     }
 });
 
