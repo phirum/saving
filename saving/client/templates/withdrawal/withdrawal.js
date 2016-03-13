@@ -263,158 +263,145 @@ var confirm = function (e, t) {
                                     Meteor.call('getLastPerform', accountId, function (le, getLastNoPerformDate) {
                                         if (le) {
                                             alertify.error(le.message);
-                                        } else {
-
-                                            // Receivable interest
-                                            var interestCalResult = interestCalWithRate(getLast.performDate, performDate, getLast.principalBal, productDoc.rate, accountId);
-                                            var dayNumberResult = interestCalResult.dayNumber;
-                                            t.$('[name="dayNumber"]').val(dayNumberResult);
-
-                                            var principalResult = roundCurrency(getLast.principalBal, accountId);
-                                            var interestResult = roundCurrency(getLast.interestBal + interestCalResult.interest, accountId);
-                                            var totalResult = roundCurrency(principalResult + interestResult, accountId);
-                                            var confirmData;
-
-                                            // Tax
-                                            var taxRate = settingDoc.tax.currentDeposit;
-                                            if (s.startsWith(productDoc._id, '2')) {
-                                                taxRate = settingDoc.tax.fixDeposit;
-                                            }
-                                            var tax = roundCurrency(interestResult * taxRate / 100, accountId);
-
-                                            // Check product
-                                            // Fix deposit
-                                            if (s.startsWith(productDoc._id, '2')) {
-                                                // Maturity date
-                                                var maturityDate = {};
-                                                maturityDate.label = 'primary';
-                                                maturityDate.value = accountDoc.maturityDate;
-
-                                                // Get easy product
-                                                var easyProductId = '101';
-                                                var easyProductDoc = Saving.Collection.Product.findOne(easyProductId);
-                                                var offsetInterest = 0; // get back interest if withdrawal before contract
-                                                var penalty = 0;
-
-                                                // Check perform date with maturity date
-                                                if (performDate < maturityDate.value) {
-                                                    maturityDate.label = 'warning';
-
-                                                    // Cal penalty interest with easy rate
-                                                    var sumOfInterest = 0;
-                                                    var sumOfInterestWithNew;
-                                                    /*    console.log(sumOfInterest);
-                                                     Meteor.call('findRecords', 'Saving.Collection.Perform', {accountId: accountId}, {}, function (lle, performs) {
-                                                     if (lle) {
-                                                     alertify.error(lle.message);
-                                                     } else {
-                                                     performs.forEach(function (perform) {
-                                                     sumOfInterest += perform.interestRe;
-                                                     });
-                                                     console.log('------sum inside the method-----');
-                                                     sumOfInterest += 1;
-                                                     console.log(sumOfInterest);
-
-                                                     }
-                                                     });
-                                                     console.log('--------after finish call method---------');
-                                                     console.log(sumOfInterest);*/
-
-                                                    /* var fetcherParams = "getPerform" + accountId;
-                                                     Fetcher.setDefault(fetcherParams, false);
-                                                     Fetcher.retrieve(fetcherParams, 'findRecords', 'Saving.Collection.Perform', {accountId: accountId});
-                                                     var performs = Fetcher.get(fetcherParams);*/
-
-                                                    Saving.Collection.Perform.find({accountId: accountId})
-                                                        .forEach(function (obj) {
-                                                            sumOfInterest += obj.interestRe;
-                                                        });
-                                                    sumOfInterestWithNew = roundCurrency(sumOfInterest + interestResult, accountId);
-
-                                                    var varianceOfRate = roundCurrency(productDoc.rate - easyProductDoc.rate, accountId);
-                                                    offsetInterest = roundCurrency((varianceOfRate * sumOfInterestWithNew) / productDoc.rate, accountId);
-                                                    penalty = roundCurrency(sumOfInterestWithNew * settingDoc.penaltyForFixDeposit / 100, accountId);
+                                        }
+                                        else {
+                                            //it's not so good to use this Meteor.call method in this place
+                                            Meteor.call('findRecords', 'Saving.Collection.Perform', {accountId: accountId}, {}, function (lle, performs) {
+                                                if (lle) {
+                                                    alertify.error(lle.message);
                                                 }
+                                                else {
+                                                    // Receivable interest
+                                                    var interestCalResult = interestCalWithRate(getLast.performDate, performDate, getLast.principalBal, productDoc.rate, accountId);
+                                                    var dayNumberResult = interestCalResult.dayNumber;
+                                                    t.$('[name="dayNumber"]').val(dayNumberResult);
 
-                                                // Set new value on form object
-                                                t.find('[name="principalRe"]').value = principalResult;
-                                                t.find('[name="interestRe"]').value = interestResult;
-                                                t.find('[name="withFields.offsetInterest"]').value = offsetInterest;
-                                                t.find('[name="withFields.penalty"]').value = penalty;
-                                                t.find('[name="amount"]').value = totalResult;
-                                                t.find('[name="memo"]').value = 'Offset Interest: ' + numeral(offsetInterest).format('0,0.00')
-                                                    + ' | Penalty: ' + numeral(penalty).format('0,0.00');
+                                                    var principalResult = roundCurrency(getLast.principalBal, accountId);
+                                                    var interestResult = roundCurrency(getLast.interestBal + interestCalResult.interest, accountId);
+                                                    var totalResult = roundCurrency(principalResult + interestResult, accountId);
+                                                    var confirmData;
 
-                                                t.$('[type="submit"]').removeAttr('disabled');
-                                                t.$('[name="amount"]').attr('readonly', 'readonly');
+                                                    // Tax
+                                                    var taxRate = settingDoc.tax.currentDeposit;
+                                                    if (s.startsWith(productDoc._id, '2')) {
+                                                        taxRate = settingDoc.tax.fixDeposit;
+                                                    }
+                                                    var tax = roundCurrency(interestResult * taxRate / 100, accountId);
 
-                                                confirmData = {
-                                                    dayNumber: dayNumberResult,
-                                                    principal: numeral(principalResult).format('0,0.00'),
-                                                    interest: numeral(interestResult).format('0,0.00'),
-                                                    tax: numeral(tax).format('0,0.00') + ' (Rate: ' + taxRate + '%)',
-                                                    total: numeral(totalResult).format('0,0.00'),
-                                                    offsetInterest: numeral(offsetInterest).format('0,0.00') + ' (Rate: ' + easyProductDoc.rate + '%)',
-                                                    penalty: numeral(penalty).format('0,0.00') + ' (Penalty: ' + settingDoc.penaltyForFixDeposit + '%)',
-                                                    client: clientDoc.khName,
-                                                    accDate: accountDoc.accDate,
-                                                    currency: currencyDoc._id,
-                                                    product: productDoc._id + ' | ' + productDoc.name,
-                                                    rate: numeral(productDoc.rate).format('0,0.00') + '%',
-                                                    maturityDate: maturityDate,
-                                                    lastActiveDate: getLastNoPerformDate.performDate
-                                                };
+                                                    // Check product
+                                                    // Fix deposit
+                                                    if (s.startsWith(productDoc._id, '2')) {
 
-                                                // For product = 201, 202
-                                                if (productDoc._id == '201' || productDoc._id == '202') {
-                                                    alertify.alert(
-                                                        'Confirm',
-                                                        renderTemplate(Template.saving_withdrawalConfirmForActiveInterest, confirmData).html,
-                                                        function () {
-                                                            var withdrawalOpt = $('[name="withdrawalConfirmRadio"]:checked').val();
-                                                            if (withdrawalOpt == 'interest') {
-                                                                t.find('[name="amount"]').value = parseFloat(interestResult);
-                                                                t.find('[name="memo"]').value = '';
-                                                                t.find('[name="withFields.offsetInterest"]').value = 0;
-                                                                t.find('[name="withFields.penalty"]').value = 0;
-                                                            }
-                                                        });
+                                                        // Maturity date
+                                                        var maturityDate = {};
+                                                        maturityDate.label = 'primary';
+                                                        maturityDate.value = accountDoc.maturityDate;
 
-                                                }
-                                                else if (productDoc._id == '203' || productDoc._id == '204') {// For product = 203, 204
-                                                    alertify.alert(
-                                                        'Confirm',
-                                                        renderTemplate(Template.saving_withdrawalConfirmForAchievment, confirmData).html
-                                                    );
-                                                }
+                                                        // Get easy product
+                                                        var easyProductId = '101';
+                                                        var easyProductDoc = Saving.Collection.Product.findOne(easyProductId);
+                                                        var offsetInterest = 0; // get back interest if withdrawal before contract
+                                                        var penalty = 0;
 
-                                            }
-                                            else { // Current deposit
-                                                confirmData = {
-                                                    dayNumber: dayNumberResult,
-                                                    principal: numeral(principalResult).format('0,0.00'),
-                                                    interest: numeral(interestResult).format('0,0.00'),
-                                                    tax: numeral(tax).format('0,0.00') + ' (Rate: ' + taxRate + '%)',
-                                                    total: numeral(totalResult).format('0,0.00'),
-                                                    client: clientDoc.khName,
-                                                    accDate: accountDoc.accDate,
-                                                    currency: currencyDoc._id,
-                                                    product: productDoc._id + ' | ' + productDoc.name,
-                                                    rate: numeral(productDoc.rate).format('0,0.00'),
-                                                    lastActiveDate: getLastNoPerformDate.performDate
-                                                };
+                                                        // Check perform date with maturity date
+                                                        if (performDate < maturityDate.value) {
+                                                            maturityDate.label = 'warning';
 
-                                                alertify.alert(
-                                                    'Confirm',
-                                                    renderTemplate(Template.saving_withdrawalConfirm, confirmData).html, function () {
+                                                            // Cal penalty interest with easy rate
+                                                            var sumOfInterest = 0;
+                                                            var sumOfInterestWithNew;
+                                                            performs.forEach(function (perform) {
+                                                                sumOfInterest += perform.interestRe;
+                                                            });
+                                                            sumOfInterestWithNew = roundCurrency(sumOfInterest + interestResult, accountId);
+
+                                                            var varianceOfRate = roundCurrency(productDoc.rate - easyProductDoc.rate, accountId);
+                                                            offsetInterest = roundCurrency((varianceOfRate * sumOfInterestWithNew) / productDoc.rate, accountId);
+                                                            penalty = roundCurrency(sumOfInterestWithNew * settingDoc.penaltyForFixDeposit / 100, accountId);
+                                                        }
+
+                                                        // Set new value on form object
                                                         t.find('[name="principalRe"]').value = principalResult;
                                                         t.find('[name="interestRe"]').value = interestResult;
-                                                        t.find('[name="amount"]').value = parseFloat(totalResult);
+                                                        t.find('[name="withFields.offsetInterest"]').value = offsetInterest;
+                                                        t.find('[name="withFields.penalty"]').value = penalty;
+                                                        t.find('[name="amount"]').value = totalResult;
+                                                        t.find('[name="memo"]').value = 'Offset Interest: ' + numeral(offsetInterest).format('0,0.00')
+                                                            + ' | Penalty: ' + numeral(penalty).format('0,0.00');
 
                                                         t.$('[type="submit"]').removeAttr('disabled');
-                                                        t.$('[name="amount"]').removeAttr('readonly');
-                                                    });
-                                            }
+                                                        t.$('[name="amount"]').attr('readonly', 'readonly');
+
+                                                        confirmData = {
+                                                            dayNumber: dayNumberResult,
+                                                            principal: numeral(principalResult).format('0,0.00'),
+                                                            interest: numeral(interestResult).format('0,0.00'),
+                                                            tax: numeral(tax).format('0,0.00') + ' (Rate: ' + taxRate + '%)',
+                                                            total: numeral(totalResult).format('0,0.00'),
+                                                            offsetInterest: numeral(offsetInterest).format('0,0.00') + ' (Rate: ' + easyProductDoc.rate + '%)',
+                                                            penalty: numeral(penalty).format('0,0.00') + ' (Penalty: ' + settingDoc.penaltyForFixDeposit + '%)',
+                                                            client: clientDoc.khName,
+                                                            accDate: accountDoc.accDate,
+                                                            currency: currencyDoc._id,
+                                                            product: productDoc._id + ' | ' + productDoc.name,
+                                                            rate: numeral(productDoc.rate).format('0,0.00') + '%',
+                                                            maturityDate: maturityDate,
+                                                            lastActiveDate: getLastNoPerformDate.performDate
+                                                        };
+
+                                                        // For product = 201, 202
+                                                        if (productDoc._id == '201' || productDoc._id == '202') {
+                                                            alertify.alert(
+                                                                'Confirm',
+                                                                renderTemplate(Template.saving_withdrawalConfirmForActiveInterest, confirmData).html,
+                                                                function () {
+                                                                    var withdrawalOpt = $('[name="withdrawalConfirmRadio"]:checked').val();
+                                                                    if (withdrawalOpt == 'interest') {
+                                                                        t.find('[name="amount"]').value = parseFloat(interestResult);
+                                                                        t.find('[name="memo"]').value = '';
+                                                                        t.find('[name="withFields.offsetInterest"]').value = 0;
+                                                                        t.find('[name="withFields.penalty"]').value = 0;
+                                                                    }
+                                                                });
+
+                                                        }
+                                                        else if (productDoc._id == '203' || productDoc._id == '204') {// For product = 203, 204
+                                                            alertify.alert(
+                                                                'Confirm',
+                                                                renderTemplate(Template.saving_withdrawalConfirmForAchievment, confirmData).html
+                                                            );
+                                                        }
+
+                                                    }
+                                                    else { // Current deposit
+                                                        confirmData = {
+                                                            dayNumber: dayNumberResult,
+                                                            principal: numeral(principalResult).format('0,0.00'),
+                                                            interest: numeral(interestResult).format('0,0.00'),
+                                                            tax: numeral(tax).format('0,0.00') + ' (Rate: ' + taxRate + '%)',
+                                                            total: numeral(totalResult).format('0,0.00'),
+                                                            client: clientDoc.khName,
+                                                            accDate: accountDoc.accDate,
+                                                            currency: currencyDoc._id,
+                                                            product: productDoc._id + ' | ' + productDoc.name,
+                                                            rate: numeral(productDoc.rate).format('0,0.00'),
+                                                            lastActiveDate: getLastNoPerformDate.performDate
+                                                        };
+
+                                                        alertify.alert(
+                                                            'Confirm',
+                                                            renderTemplate(Template.saving_withdrawalConfirm, confirmData).html, function () {
+                                                                t.find('[name="principalRe"]').value = principalResult;
+                                                                t.find('[name="interestRe"]').value = interestResult;
+                                                                t.find('[name="amount"]').value = parseFloat(totalResult);
+
+                                                                t.$('[type="submit"]').removeAttr('disabled');
+                                                                t.$('[name="amount"]').removeAttr('readonly');
+                                                            });
+                                                    }
+
+                                                }
+                                            });
                                         }
                                     });
                                 }
