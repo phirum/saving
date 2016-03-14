@@ -131,6 +131,7 @@ Template.saving_withdrawalInsert.onDestroyed(function () {
 Template.saving_withdrawalAccountSearch.events({
     'click .item': function (e, t) {
         var $account = $('[name="accountId"]');
+        Meteor.subscribe('saving_accountById',this._id);
         $account.val(this._id);
         $account.change();
 

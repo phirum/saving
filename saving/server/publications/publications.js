@@ -37,3 +37,11 @@ Meteor.publish('saving_perform', function () {
         return Saving.Collection.Perform.find();
     }
 });
+
+
+Meteor.publish('saving_accountById', function (id) {
+    if (this.userId) {
+        return Saving.Collection.Account.find({_id: id});
+    }
+});
+

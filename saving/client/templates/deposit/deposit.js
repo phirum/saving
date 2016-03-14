@@ -236,6 +236,7 @@ Template.saving_depositAccountSearch.events({
     'click .item': function (e, t) {
         debugger;
         var $account = $('[name="accountId"]');
+        Meteor.subscribe('saving_accountById',this._id);
         $account.val(this._id);
         $account.change();
 
