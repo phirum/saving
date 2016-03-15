@@ -29,7 +29,7 @@ Saving.Collection.Perform.before.insert(function (userId, doc) {
             doc.status = 'N';
         }
     } else {
-
+        doc.amount = doc.amount * -1;
         var accountDoc = Saving.Collection.Account.findOne(doc.accountId);
         var settingDoc = Saving.Collection.Setting.findOne();
         var taxRate = settingDoc.tax.currentDeposit;
@@ -55,6 +55,7 @@ Saving.Collection.Perform.before.insert(function (userId, doc) {
             // Cal tax amount
             doc.withFields.tax = roundCurrencyServer(doc.amount * taxRate / 100, doc.accountId);
         }
+        doc.amount = doc.amount * -1;
 
     }
 });
