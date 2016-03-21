@@ -36,7 +36,7 @@ Template.saving_withdrawal.events({
         var id = this._id;
 
         // Check last record or not
-        Meteor.call('getLastPerform', {_id: this.accountId}, function (error, getLast) {
+        Meteor.call('getLastPerform',this.accountId, function (error, getLast) {
             if (error) {
                 alertify.error(error.message);
             } else {
