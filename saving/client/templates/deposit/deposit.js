@@ -42,6 +42,7 @@ Template.saving_deposit.events({
             .maximize();
     },
     'click .update': function (e, t) {
+        Meteor.subscribe('saving_accountById',this.accountId);
         Meteor.call('findOneRecord', 'Saving.Collection.Perform', {_id: this._id}, {}, function (error, perform) {
             if (error) {
                 alertify.error(error.message);
